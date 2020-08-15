@@ -166,7 +166,7 @@ fn app() -> clap::App<'static, 'static> {
                     SubCommand::with_name("remove")
                         .alias("rm")
                         .about("Remove a device")
-                        .arg(Arg::with_name("ids").help("Key or name to remove from the device list. The key can either be a public or private key.").required(true).takes_value(true).multiple(true))
+                        .arg(Arg::with_name("ids").help("Public, private key or name of the device to remove.").required(true).takes_value(true).multiple(true))
                 )
                 .setting(AppSettings::SubcommandRequiredElseHelp),
         )
