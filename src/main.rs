@@ -1,4 +1,3 @@
-#![feature(option_result_contains)]
 use clap::{AppSettings, Arg, SubCommand};
 // TODO remove unused `use` with clap v3
 use clap::{crate_authors, crate_description, crate_name, crate_version};
@@ -316,7 +315,8 @@ fn main() {
                     for device in login.user.devices.iter().filter(|device| {
                         id == device.name
                             || id == device.pubkey
-                            || private_to_public_key(id).contains(&device.pubkey)
+                            || private_to_public_key(id)
+                                .map_or(false, |pubkey| pubkey == device.pubkey)
                     }) {
                         client
                             .delete(&format!(
