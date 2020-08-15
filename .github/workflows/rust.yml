@@ -1,0 +1,23 @@
+name: Rust
+
+on:
+  push:
+    branches: [ trunk ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --release --verbose
+    - name: Run tests
+      run: cargo test --verbose
+    - name: Upload MacOS mozwire binary
+      uses: actions/upload-artifact@v2
+      with:
+        name: mozwire
+        path: target/release/mozwire
