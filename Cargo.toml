@@ -1,8 +1,12 @@
 [package]
 name = "mozwire"
 description = "MozillaVPN wireguard configuration manager"
-version = "0.1.0"
+categories = ["command-line-utilities", "authentication", "config"]
+keywords = ["wireguard", "vpn", "mozilla", "cross-platform", "linux"]
 authors = ["Nils <nils@nilsand.re>"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/NilsIrl/MozWire/"
+version = "0.1.0"
 edition = "2018"
 
 [profile.release]
