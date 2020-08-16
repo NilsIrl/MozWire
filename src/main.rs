@@ -468,14 +468,17 @@ Endpoint = {}:{}\n",
                             path => {
                                 let path = std::path::Path::new(path);
                                 if path.is_dir() {
-                                    let mut file = std::fs::File::create(
-                                        path.join(format!("{}.conf", server.hostname)),
-                                    )
-                                    .unwrap();
-                                    file.write(output.as_bytes()).unwrap();
+                                    let path = path.join(format!("{}.conf", server.hostname));
+                                    std::fs::File::create(&path)
+                                        .unwrap()
+                                        .write(output.as_bytes())
+                                        .unwrap();
+                                    eprintln!("Wrote output to {}.", path.to_str().unwrap());
                                 } else {
-                                    let mut file = std::fs::File::create(path).unwrap();
-                                    file.write(output.as_bytes()).unwrap();
+                                    std::fs::File::create(path)
+                                        .unwrap()
+                                        .write(output.as_bytes())
+                                        .unwrap();
                                 }
                             }
                         }
