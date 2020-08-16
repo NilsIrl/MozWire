@@ -225,7 +225,8 @@ fn app() -> clap::App<'static, 'static> {
                 .long("token")
                 .help(
                     "The token used to communicate with the Mozilla API. If unspecified, a web page \
-                    will be opened to retrieve the token.",
+                    will be opened to retrieve the token. the MOZ_TOKEN environment variable can \
+                    also be used instead.",
                 ).env("MOZ_TOKEN")
                 .global(true),
         ).arg(

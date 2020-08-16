@@ -46,6 +46,14 @@ Output configuration for all servers into the `/etc/wireguard` directory.
 mozwire relay save -o /etc/wireguard -n 0
 ```
 
+Use `MOZ_TOKEN` to "cache" the token instead of specifying it each time with
+`--token` or log in each time.
+
+```sh
+export MOZ_TOKEN=$(mozwire --print-token) # save the token in the MOZ_TOKEN environment variable
+mozwire .... # mozwire commands can be ran without having to log in
+```
+
 [![asciicast](https://asciinema.org/a/002XVrcKQYcWOwP15OLVLjEL9.svg)](https://asciinema.org/a/002XVrcKQYcWOwP15OLVLjEL9)
 
 ```
