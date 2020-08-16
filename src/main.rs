@@ -138,12 +138,16 @@ const BASE_URL: &str = "https://vpn.mozilla.org/api/v1";
 
 fn app() -> clap::App<'static, 'static> {
     let name_arg = Arg::with_name("name")
-        .help("Defaults to the hostname of the system. This value doesn't matter.")
+        .help("Name linked with a public key. Defaults to the hostname of the system. This value has no effect on the functioning of the VPN.")
         .long("name");
     clap::app_from_crate!()
+        .after_help("To query MozillaVPN, mozwire requires a token, specified with --token. If it \
+        is left unspecified, mozwire will generate a token by opening a login page, the token \
+        generated can be printed using --print-token, so that it can be reused. To generate a \
+        WireGuard configuration use `mozwire relay save`.")
         .subcommand(
             SubCommand::with_name("device")
-                .about("Manage devices")
+                .about("Add, remove and list devices. To connect to MozillaVPN, a device needs to be in the list.")
                 .subcommand(
                     SubCommand::with_name("add")
                         .about("List Devices")
@@ -172,7 +176,7 @@ fn app() -> clap::App<'static, 'static> {
         )
         .subcommand(
             SubCommand::with_name("relay")
-                .about("Manage relays")
+                .about("List available relays (VPN Servers) and save WireGuard configurations for these.")
                 .subcommand(
                     SubCommand::with_name("list")
                         .alias("ls")
@@ -207,7 +211,7 @@ fn app() -> clap::App<'static, 'static> {
         .arg(
             Arg::with_name("print-token")
                 .long("print-token")
-                .help("Print the token used to query the Mozilla API.")
+                .help("Print the token used to query the Mozilla API, so that it can be reused with --token, without having to sign in each time.")
                 .global(true)
         )
         .arg(
@@ -219,6 +223,8 @@ If unspecified, a web page will be opened to retrieve the token.",
                 )
                 .takes_value(true)
                 .global(true),
+        ).arg(
+        Arg::with_name("no-browser").long("no-browser").help("By default, mozwire will open the login page in a browser, this option prevents mozwire a browser page from being opened.").takes_value(false).global(true)
         )
         .global_setting(AppSettings::ColoredHelp)
         .setting(AppSettings::ArgRequiredElseHelp)
@@ -242,20 +248,23 @@ fn main() {
                 .json::<LoginURLs>()
                 .unwrap();
 
-            eprintln!("Please visit {}", login.login_url);
-            match webbrowser::open(&login.login_url) {
-                Ok(_) => eprintln!("Link opened in browser."),
-                Err(_) => eprintln!("Failed to open link in browser, please visit it manually."),
+            eprint!("Please visit {}.", login.login_url);
+            if !matches.is_present("no-browser") {
+                match webbrowser::open(&login.login_url) {
+                    Ok(_) => eprint!(" Link opened in browser."),
+                    Err(_) => eprint!(" Failed to open link in browser, please visit it manually."),
+                }
             }
+            eprintln!();
 
             let poll_interval = std::time::Duration::from_secs(login.poll_interval);
             loop {
                 let response = client.get(&login.verification_url).send().unwrap();
                 if response.status() == reqwest::StatusCode::OK {
+                    eprintln!("Login successful");
                     break response.json::<Login>().unwrap();
                 } else {
                     match response.json::<Error>().unwrap() {
-                        // Login token expired
                         Error { errno: 126, .. } => {}
                         error => error.fail(),
                     }
@@ -283,7 +292,7 @@ fn main() {
     let mut action_performed = false;
     if matches.is_present("print-token") {
         action_performed = true;
-        println!("{}", login.token);
+        println!("token: {}", login.token);
     }
 
     let mut rng = rand::thread_rng();
@@ -306,6 +315,7 @@ fn main() {
                 );
             }
             ("list", ..) => {
+                eprintln!("Devices:");
                 for device in login.user.devices {
                     print_device(&device);
                 }
@@ -330,6 +340,10 @@ fn main() {
                             .bearer_auth(&login.token)
                             .send()
                             .unwrap();
+                        eprintln!(
+                            "Device {}, with public key: {} has successfully been removed.",
+                            device.name, device.pubkey
+                        );
                     }
                 }
             }
@@ -480,5 +494,5 @@ fn print_device(device: &Device) {
         ipv4_address,
         ipv6_address,
     } = device;
-    println!("{}: {}, {},{}", name, pubkey, ipv4_address, ipv6_address);
+    println!("- {}: {}, {},{}", name, pubkey, ipv4_address, ipv6_address);
 }
