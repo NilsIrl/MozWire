@@ -496,3 +496,34 @@ fn print_device(device: &Device) {
     } = device;
     println!("- {}: {}, {},{}", name, pubkey, ipv4_address, ipv6_address);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_private_to_public_key() {
+        assert_eq!(
+            private_to_public_key("OO9fkBohqv0mnmogkonAXBAvurjfy/DYXcpI1Yt7pEo=").unwrap(),
+            "JyMv6TlARDnBfQmXFzlywOLveNV3mBMaWosFjTcYE0g="
+        );
+        assert_eq!(
+            private_to_public_key("wD4tAq9edXWCILzf8uO7qgsOs/2gTUTvcGMhUdwS6E8=").unwrap(),
+            "wv6lbcAK1L+IYJk8SgpRLgFED7/pggu8uvi8Li7OjH4="
+        );
+
+        assert_eq!(
+            private_to_public_key("4AaD2YkoQ+c2ccL/fnjTmTeRdiZVhvXhiL4gApeePG4=").unwrap(),
+            "idTXEeR5rjxYMgQpwbLP+2qYEYR5KinvDqfZpFg7HTo="
+        );
+
+        assert_eq!(
+            private_to_public_key("iBr/jbjbij/w3BpvTvkB6r1zQvMpIx5mc1C/qnuzpnU=").unwrap(),
+            "gxi5un691rLWUD4HSXM0gU4OpHt4r+yVlQ/jfDYJIR8="
+        );
+
+        assert_eq!(
+            private_to_public_key("kCJuJAX+EWZ23tPK1b+Szl+m89TYxLh9ilIn+gDzZnc=").unwrap(),
+            "nT4fmyCGntbuIetTOndAAF/b02p5GGj3MkOSb1wF1zY="
+        );
+    }
+}
