@@ -35,6 +35,17 @@ cargo build
 
 ## Usage
 
+`mozwire relay save` to generate a WireGuard configuration. `--help` to get help
+on a subcommand, e.g. `mozwire relay --help`, `mozwire relay save --help`.
+
+### Examples
+
+Output configuration for all servers into the `/etc/wireguard` directory.
+
+```sh
+mozwire relay save -o /etc/wireguard -n 0
+```
+
 [![asciicast](https://asciinema.org/a/002XVrcKQYcWOwP15OLVLjEL9.svg)](https://asciinema.org/a/002XVrcKQYcWOwP15OLVLjEL9)
 
 ```
