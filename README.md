@@ -9,7 +9,7 @@ users access to this VPN provider. MozWire also supports Windows.
 ### Using pre-built binaries from the CI (Linux, macOS and Windows) (Recommended)
 
 Linux, macOS and Windows binaries are available on the [release page]. These
-binaries have built by GitHub actions CI.
+binaries are built by GitHub Actions CI.
 
 ### Using `cargo install`
 
