@@ -224,10 +224,9 @@ fn app() -> clap::App<'static, 'static> {
             Arg::with_name("token")
                 .long("token")
                 .help(
-                    "The token used to communicate with the Mozilla API.
-If unspecified, a web page will be opened to retrieve the token.",
-                )
-                .takes_value(true)
+                    "The token used to communicate with the Mozilla API. If unspecified, a web page \
+                    will be opened to retrieve the token.",
+                ).env("MOZ_TOKEN")
                 .global(true),
         ).arg(
         Arg::with_name("no-browser").long("no-browser").help("By default, mozwire will open the login page in a browser, this option prevents mozwire a browser page from being opened.").takes_value(false).global(true)
@@ -298,7 +297,7 @@ fn main() {
     let mut action_performed = false;
     if matches.is_present("print-token") {
         action_performed = true;
-        println!("token: {}", login.token);
+        println!("{}", login.token);
     }
 
     let mut rng = rand::thread_rng();
