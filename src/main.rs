@@ -184,7 +184,9 @@ fn app() -> clap::App<'static, 'static> {
                 )
                 .subcommand(
                     SubCommand::with_name("save")
-                        .about("Save wireguard configuration for a MozillaVPN server")
+                        .about("Save wireguard configuration for a MozillaVPN server. If the \
+                        private key used is not in the device list uploaded, mozwire will upload \
+                        it.")
                         .arg(
                             Arg::with_name("regex")
                                 .help("Regex to filter servers by hostname.")
@@ -195,10 +197,14 @@ fn app() -> clap::App<'static, 'static> {
                         ).default_value("."))
                         .arg(
                             Arg::with_name("privkey").long("privkey")
-                                .help("Private key to use in the configuration file.").takes_value(true),
+                                .help("Private key to use in the configuration file. If it is not \
+                                    specified, mozwire will generate one and update the device list.").takes_value(true),
                         ).arg(&name_arg).arg(
                         Arg::with_name("port").long("port").short("p").default_value("51820")
-                        .help("Port to use. This can be changed to bypass firewalls, by for example, setting it to the value of 53. A value of \"random\" will choose a random port within the available range, which is the default behaviour of the windows MozillaVPN client."))
+                        .help("Port to use. This can be changed to bypass firewalls and dissimulate \
+                        the use of WireGuard. A value of \"random\" will choose a random port \
+                        within the available range, which is the only available behaviour of the \
+                        windows MozillaVPN client."))
                         .arg(
                             Arg::with_name("limit")
                                 .help("Limit the number of servers saved. A value of 0 disables the limit.")
