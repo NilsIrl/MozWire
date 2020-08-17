@@ -305,7 +305,13 @@ fn main() {
         ("device", Some(device_m)) => match device_m.subcommand() {
             ("add", Some(sub_m)) => {
                 let pubkey = sub_m.value_of("pubkey").map_or_else(
-                    || private_to_public_key(sub_m.value_of("privkey").unwrap()).unwrap(),
+                    || match private_to_public_key(sub_m.value_of("privkey").unwrap()) {
+                        Ok(pubkey) => pubkey,
+                        Err(_) => {
+                            println!("Invalid private key.");
+                            std::process::exit(2)
+                        }
+                    },
                     |pubkey| pubkey.to_owned(),
                 );
                 print_device(
@@ -384,7 +390,13 @@ fn main() {
                         },
                         |privkey_base64| {
                             (
-                                private_to_public_key(privkey_base64).unwrap(),
+                                match private_to_public_key(privkey_base64) {
+                                    Ok(pubkey) => pubkey,
+                                    Err(_) => {
+                                        println!("Invalid private key.");
+                                        std::process::exit(2)
+                                    }
+                                },
                                 privkey_base64.to_owned(),
                             )
                         },
