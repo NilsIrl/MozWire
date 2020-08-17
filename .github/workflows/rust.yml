@@ -1,105 +1,19 @@
 name: Rust
-
 on:
   push:
-    tags:
-      - 'v*'
-
-env:
-  CARGO_TERM_COLOR: always
-  CARGO_TERM_VERBOSE: true
-
+    branches:
+      - trunk
+  pull_request:
 jobs:
-  build-windows:
-    runs-on: windows-latest
-    env:
-      RUSTFLAGS: "-C target-feature=+crt-static"
-    steps:
-    - uses: actions/checkout@v2
-    - run: cargo build --release
-    - run: cargo test --release
-    - uses: actions/upload-artifact@v2
-      with:
-        name: mozwire-${{ runner.os }}
-        path: target/release/mozwire.exe
-  build-macos:
-    runs-on: macos-latest
-    env:
-      MACOSX_DEPLOYMENT_TARGET: 10.7
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
-    - run: cargo build --release
-    - run: cargo test --release
-    - uses: actions/upload-artifact@v2
-      with:
-        name: mozwire-${{ runner.os }}
-        path: target/release/mozwire
-  build-ubuntu:
-    runs-on: ubuntu-latest
-    env:
-      CARGO_BUILD_TARGET: x86_64-unknown-linux-musl
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
-    - run: rustup target add $CARGO_BUILD_TARGET
-    - run: sudo apt install -y musl-tools
-    - run: cargo build --release
-    - run: cargo test --release
-    - uses: actions/upload-artifact@v2
-      with:
-        name: mozwire-${{ runner.os }}
-        path: target/x86_64-unknown-linux-musl/release/mozwire
   format:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - run: cargo fmt
     - run: git diff-index --quiet HEAD -- || (git diff && exit 1)
-  release:
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    needs: [build-windows, build-ubuntu]
+  build:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
     steps:
-    - uses: actions/download-artifact@v2
-    - uses: actions/create-release@v1
-      id: create_release
-      with:
-        tag_name: ${{ github.ref }}
-        draft: true
-    - uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: mozwire-linux
-        asset_path: mozwire-Linux/mozwire
-        asset_content_type: application/octet-stream
-    - uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: mozwire-macos
-        asset_path: mozwire-macOS/mozwire
-        asset_content_type: application/octet-stream
-    - uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: mozwire-windows.exe
-        asset_path: mozwire-Windows/mozwire.exe
-        asset_content_type: application/octet-stream
+    - uses: actions/checkout@v2
+    - run: cargo build
+    - run: cargo test
