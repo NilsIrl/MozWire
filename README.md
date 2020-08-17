@@ -1,14 +1,14 @@
 # MozWire
 
 MozWire is a cross-platform client for MozillaVPN, finally giving Linux, macOS,
-FreeBSD, OpenBSD and others (all platforms supporting the WireGuard protocol)
+FreeBSD, OpenBSD, and others (all platforms supporting the WireGuard protocol)
 users access to this VPN provider. MozWire also supports Windows.
 
 ## Installation
 
 ### Using pre-built binaries from the CI (Linux, macOS and Windows) (Recommended)
 
-Linux, macOS and Windows binaries are available on the [release page]. These
+Linux, macOS, and Windows binaries are available on the [release page]. These
 binaries are built by GitHub Actions CI.
 
 ### Using `cargo install`
@@ -75,7 +75,7 @@ OPTIONS:
                            MOZ_TOKEN=]
 
 SUBCOMMANDS:
-    device    Add, remove and list devices. To connect to MozillaVPN, a device needs to be on the list.
+    device    Add, remove, and list devices. To connect to MozillaVPN, a device needs to be on the list.
     help      Prints this message or the help of the given subcommand(s)
     relay     List available relays (VPN Servers) and save WireGuard configurations for these.
 
