@@ -1,7 +1,7 @@
 # MozWire
 
 MozWire is a cross-platform client for MozillaVPN, finally giving Linux, macOS,
-FreeBSD, OpenBSD and others (all platforms supporting the WireGuard protocol)
+FreeBSD, OpenBSD and other (all platforms supporting the WireGuard protocol)
 users access to this VPN provider. MozWire also supports Windows.
 
 ## Installation
