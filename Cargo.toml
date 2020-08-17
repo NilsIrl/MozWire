@@ -6,6 +6,7 @@ keywords = ["wireguard", "vpn", "mozilla", "cross-platform", "linux"]
 authors = ["Nils <nils@nilsand.re>"]
 license = "GPL-3.0-or-later"
 repository = "https://github.com/NilsIrl/MozWire/"
+readme = "README.md"
 version = "0.3.0"
 edition = "2018"
 
