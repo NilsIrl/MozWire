@@ -3,10 +3,7 @@ use clap::{AppSettings, Arg, SubCommand};
 use clap::{crate_authors, crate_description, crate_name, crate_version};
 use core::num::NonZeroUsize;
 use rand::seq::IteratorRandom;
-use std::{
-    io::Write,
-    net::{Ipv4Addr, Ipv6Addr},
-};
+use std::net::{Ipv4Addr, Ipv6Addr};
 use x25519_dalek::{PublicKey, StaticSecret};
 
 #[derive(serde::Deserialize)]
@@ -193,7 +190,8 @@ fn app() -> clap::App<'static, 'static> {
                                 .default_value(""),
                         )
                         .arg(Arg::with_name("output").short("o").help(
-                            "Path to the output directory, output file or '-' to output to stdout. Defaults to the current directory",
+                            "Directory in which to output the WireGuard configuration. Defaults to \
+                            the current directory",
                         ).default_value("."))
                         .arg(
                             Arg::with_name("privkey").long("privkey")
@@ -427,8 +425,13 @@ fn main() {
                     } else {
                         filtered.collect()
                     } {
-                        let output = format!(
-                            "[Interface]
+                        let path = std::path::Path::new(save_m.value_of("output").unwrap());
+                        std::fs::create_dir_all(&path).unwrap();
+                        let path = path.join(format!("{}.conf", server.hostname));
+                        std::fs::write(
+                            &path,
+                            format!(
+                                "[Interface]
 PrivateKey = {}
 Address = {},{}
 DNS = {}
@@ -437,51 +440,36 @@ DNS = {}
 PublicKey = {}
 AllowedIPs = 0.0.0.0/0,::0/0
 Endpoint = {}:{}\n",
-                            privkey_base64,
-                            ipv4_address,
-                            ipv6_address,
-                            server.ipv4_gateway,
-                            server.public_key,
-                            server.ipv4_addr_in,
-                            // Deal with ranges
-                            {
-                                let mut ports =
-                                    server.port_ranges.iter().map(|(from, to)| (*from)..=(*to));
-                                let port_arg = save_m.value_of("port").unwrap();
-                                if port_arg == "random" {
-                                    ports.flatten().choose(&mut rng).unwrap()
-                                } else {
-                                    let port = port_arg.parse().unwrap();
-                                    if ports.any(|range| range.contains(&port)) {
-                                        port
+                                privkey_base64,
+                                ipv4_address,
+                                ipv6_address,
+                                server.ipv4_gateway,
+                                server.public_key,
+                                server.ipv4_addr_in,
+                                // Deal with ranges
+                                {
+                                    let mut ports =
+                                        server.port_ranges.iter().map(|(from, to)| (*from)..=(*to));
+                                    let port_arg = save_m.value_of("port").unwrap();
+                                    if port_arg == "random" {
+                                        ports.flatten().choose(&mut rng).unwrap()
                                     } else {
-                                        println!("{} is outside of the usable port range.", port);
-                                        std::process::exit(2);
+                                        let port = port_arg.parse().unwrap();
+                                        if ports.any(|range| range.contains(&port)) {
+                                            port
+                                        } else {
+                                            println!(
+                                                "{} is outside of the usable port range.",
+                                                port
+                                            );
+                                            std::process::exit(2);
+                                        }
                                     }
                                 }
-                            }
-                        );
-                        match save_m.value_of("output").unwrap() {
-                            "-" => {
-                                print!("{}", output);
-                            }
-                            path => {
-                                let path = std::path::Path::new(path);
-                                if path.is_dir() {
-                                    let path = path.join(format!("{}.conf", server.hostname));
-                                    std::fs::File::create(&path)
-                                        .unwrap()
-                                        .write(output.as_bytes())
-                                        .unwrap();
-                                    eprintln!("Wrote output to {}.", path.to_str().unwrap());
-                                } else {
-                                    std::fs::File::create(path)
-                                        .unwrap()
-                                        .write(output.as_bytes())
-                                        .unwrap();
-                                }
-                            }
-                        }
+                            ),
+                        )
+                        .unwrap();
+                        println!("Wrote configuration to {}.", path.to_str().unwrap());
                     }
                 }
                 _ => unreachable!(),
