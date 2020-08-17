@@ -144,7 +144,7 @@ fn app() -> clap::App<'static, 'static> {
         WireGuard configuration use `mozwire relay save`.")
         .subcommand(
             SubCommand::with_name("device")
-                .about("Add, remove and list devices. To connect to MozillaVPN, a device needs to be in the list.")
+                .about("Add, remove and list devices. To connect to MozillaVPN, a device needs to be on the list.")
                 .subcommand(
                     SubCommand::with_name("add")
                         .about("List Devices")
