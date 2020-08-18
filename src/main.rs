@@ -93,16 +93,18 @@ impl NewDevice<'_> {
     }
 }
 
-// weight, include_in_country, port_ranges omitted
-// port_ranges is the same for each server
+// weight and include_in_country omitted
 #[derive(serde::Deserialize, Debug)]
 struct Server {
     hostname: String,
     ipv4_addr_in: Ipv4Addr,
     ipv6_addr_in: Ipv6Addr,
+    /// Same for each server
     ipv4_gateway: Ipv4Addr,
+    /// Same for each server
     ipv6_gateway: Ipv6Addr,
     public_key: String,
+    /// Same for each server
     port_ranges: Vec<(u16, u16)>,
 }
 
