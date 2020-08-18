@@ -34,6 +34,13 @@ struct Error {
 impl Error {
     fn fail(self) -> ! {
         match self.errno {
+            120 => {
+                // the message, can be:
+                // - Format is Authorization: Bearer [token]
+                // - jwt malformed
+                // - invalid token
+                eprintln!("Invalid token ({})", self.error);
+            }
             122 => {
                 // TODO: see https://github.com/NilsIrl/MozWire/issues/2
                 eprintln!("Token expired, regenerate a token by not specifying the --token option");
@@ -290,7 +297,7 @@ fn main() {
         |token| {
             let response = client
                 .get(&format!("{}/vpn/account", BASE_URL))
-                .bearer_auth(token)
+                .bearer_auth(token.trim())
                 .send()
                 .unwrap();
             if !response.status().is_success() {
