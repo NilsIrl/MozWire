@@ -3,9 +3,9 @@ use clap::{AppSettings, Arg, SubCommand};
 use clap::{crate_authors, crate_description, crate_name, crate_version};
 use core::num::NonZeroUsize;
 use rand::seq::IteratorRandom;
+use std::fmt;
 use std::net::{Ipv4Addr, Ipv6Addr};
 use x25519_dalek::{PublicKey, StaticSecret};
-use std::fmt;
 
 #[derive(serde::Deserialize)]
 struct LoginURLs {
@@ -62,8 +62,11 @@ struct Device {
 
 impl fmt::Display for Device {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "- {}: {}, {},{}",
-            self.name, self.pubkey, self.ipv4_address, self.ipv6_address)
+        write!(
+            f,
+            "- {}: {}, {},{}",
+            self.name, self.pubkey, self.ipv4_address, self.ipv6_address
+        )
     }
 }
 
@@ -322,7 +325,8 @@ fn main() {
                     },
                     |pubkey| pubkey.to_owned(),
                 );
-                println!("{}",
+                println!(
+                    "{}",
                     &NewDevice {
                         name: sub_m
                             .value_of("name")
