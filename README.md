@@ -1,5 +1,9 @@
 # MozWire
 
+[![Crates.io](https://img.shields.io/crates/v/mozwire)][crates.io]
+[![GitHub All Releases](https://img.shields.io/github/downloads/NilsIrl/mozwire/total?label=Github%20Downloads)][release page]
+[![Crates.io](https://img.shields.io/crates/d/mozwire?label=Crates.io%20Downloads)][crates.io]
+
 MozWire is an unofficial cross-platform client for MozillaVPN, finally giving
 Linux, macOS, FreeBSD, OpenBSD and others (all platforms supporting the
 WireGuard protocol) users access to this VPN provider. MozWire also supports
@@ -23,7 +27,7 @@ yay -S mozwire
 
 ### Using `cargo install`
 
-#### From crates.io
+#### From [crates.io]
 
 ```sh
 cargo install mozwire
@@ -109,4 +113,5 @@ Copyright © Nils André
 [Arch Linux]: https://www.archlinux.org/
 [AUR]: https://wiki.archlinux.org/index.php/Arch_User_Repository
 [AUR Helper]: https://wiki.archlinux.org/index.php/AUR_helpers
+[crates.io]: https://crates.io/crates/mozwire
 [release page]: https://github.com/NilsIrl/MozWire/releases
