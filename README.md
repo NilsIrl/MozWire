@@ -11,15 +11,24 @@ users access to this VPN provider. MozWire also supports Windows.
 Linux, macOS and Windows binaries are available on the [release page]. These
 binaries are built by GitHub Actions CI.
 
+### Using the [AUR] for [Arch Linux] users
+
+The package name is [`mozwire`](https://aur.archlinux.org/packages/mozwire) and
+can be installed using your favourite [AUR helper]:
+
+```sh
+yay -S mozwire
+```
+
 ### Using `cargo install`
 
-From crates.io:
+#### From crates.io
 
 ```sh
 cargo install mozwire
 ```
 
-From git:
+#### From git
 
 ```sh
 cargo install --git https://github.com/NilsIrl/MozWire.git --branch trunk
@@ -96,4 +105,7 @@ to relicense it.
 
 Copyright © Nils André
 
+[Arch Linux]: https://www.archlinux.org/
+[AUR]: https://wiki.archlinux.org/index.php/Arch_User_Repository
+[AUR Helper]: https://wiki.archlinux.org/index.php/AUR_helpers
 [release page]: https://github.com/NilsIrl/MozWire/releases
