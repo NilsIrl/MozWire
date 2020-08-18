@@ -5,6 +5,7 @@ use core::num::NonZeroUsize;
 use rand::seq::IteratorRandom;
 use std::net::{Ipv4Addr, Ipv6Addr};
 use x25519_dalek::{PublicKey, StaticSecret};
+use std::fmt;
 
 #[derive(serde::Deserialize)]
 struct LoginURLs {
@@ -57,6 +58,13 @@ struct Device {
     pubkey: String,
     ipv4_address: String,
     ipv6_address: String,
+}
+
+impl fmt::Display for Device {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "- {}: {}, {},{}",
+            self.name, self.pubkey, self.ipv4_address, self.ipv6_address)
+    }
 }
 
 fn private_to_public_key(privkey_base64: &str) -> Result<String, base64::DecodeError> {
@@ -314,7 +322,7 @@ fn main() {
                     },
                     |pubkey| pubkey.to_owned(),
                 );
-                print_device(
+                println!("{}",
                     &NewDevice {
                         name: sub_m
                             .value_of("name")
@@ -327,7 +335,7 @@ fn main() {
             ("list", ..) => {
                 eprintln!("Devices:");
                 for device in login.user.devices {
-                    print_device(&device);
+                    println!("{}", device)
                 }
             }
             ("remove", Some(sub_m)) => {
@@ -493,17 +501,6 @@ Endpoint = {}:{}\n",
             }
         }
     };
-}
-
-// TODO: implement Display or whatever
-fn print_device(device: &Device) {
-    let Device {
-        name,
-        pubkey,
-        ipv4_address,
-        ipv6_address,
-    } = device;
-    println!("- {}: {}, {},{}", name, pubkey, ipv4_address, ipv6_address);
 }
 
 #[cfg(test)]
