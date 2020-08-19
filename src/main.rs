@@ -107,6 +107,7 @@ struct Relay {
     ipv4_addr_in: Ipv4Addr,
     ipv6_addr_in: Ipv6Addr,
     public_key: String,
+    multihop_port: u16,
 }
 
 impl Relay {
@@ -161,6 +162,12 @@ impl RelayList {
             std::process::exit(3);
         }
         server_list
+    }
+
+    fn servers(&self) -> impl Iterator<Item = &Relay> {
+        self.countries
+            .iter()
+            .flat_map(|country| country.cities.iter().flat_map(|city| city.relays.iter()))
     }
 }
 
@@ -244,7 +251,7 @@ fn app() -> clap::App<'static, 'static> {
                                 .help("Limit the number of servers saved. A value of 0 disables the limit.")
                                 .short("n")
                                 .default_value("1"),
-                        )
+                        ).arg(Arg::with_name("hop").help("Intermediate server (entry node) to connect to for multihop with wireguard.").takes_value(true).conflicts_with("port").long("hop"))
                 )
                 .setting(AppSettings::SubcommandRequiredElseHelp),
         )
@@ -396,107 +403,92 @@ fn main() {
             }
             _ => unreachable!(),
         },
-        ("relay", Some(relay_m)) => {
-            match relay_m.subcommand() {
-                ("list", ..) => {
-                    for country in RelayList::new(client, &login.token).countries {
-                        println!("{} ({})", country.name, country.code);
-                        for city in country.cities {
+        ("relay", Some(relay_m)) => match relay_m.subcommand() {
+            ("list", ..) => {
+                for country in RelayList::new(client, &login.token).countries {
+                    println!("{} ({})", country.name, country.code);
+                    for city in country.cities {
+                        println!(
+                            "\t{} ({}) @ {}°N, {}°W",
+                            city.name, city.code, city.latitude, city.longitude
+                        );
+                        for server in city.relays {
                             println!(
-                                "\t{} ({}) @ {}°N, {}°W",
-                                city.name, city.code, city.latitude, city.longitude
+                                "\t\t{} ({}, {})",
+                                server.hostname, server.ipv4_addr_in, server.ipv6_addr_in
                             );
-                            for server in city.relays {
-                                println!(
-                                    "\t\t{} ({}, {})",
-                                    server.hostname, server.ipv4_addr_in, server.ipv6_addr_in
-                                );
-                            }
                         }
                     }
                 }
-                ("save", Some(save_m)) => {
-                    let (pubkey_base64, privkey_base64) = save_m.value_of("privkey").map_or_else(
-                        || {
-                            let privkey = StaticSecret::new(&mut rand::rngs::OsRng);
-                            let privkey_base64 = base64::encode(privkey.to_bytes());
-                            (
-                                base64::encode(PublicKey::from(&privkey).as_bytes()),
-                                privkey_base64,
-                            )
-                        },
-                        |privkey_base64| {
-                            (
-                                match private_to_public_key(privkey_base64) {
-                                    Ok(pubkey) => pubkey,
-                                    Err(_) => {
-                                        println!("Invalid private key.");
-                                        std::process::exit(2)
-                                    }
-                                },
-                                privkey_base64.to_owned(),
-                            )
-                        },
-                    );
-                    let (ipv4_address, ipv6_address) = login
-                        .user
-                        .devices
-                        .iter()
-                        .find(|device| device.pubkey == pubkey_base64)
-                        .map_or_else(
-                            || {
-                                eprintln!("Public key not in device list, uploading it.");
-                                let device = NewDevice {
-                                    name: save_m
-                                        .value_of("name")
-                                        .unwrap_or(&sys_info::hostname().unwrap()),
-                                    pubkey: &pubkey_base64,
+            }
+            ("save", Some(save_m)) => {
+                let (pubkey_base64, privkey_base64) = save_m.value_of("privkey").map_or_else(
+                    || {
+                        let privkey = StaticSecret::new(&mut rand::rngs::OsRng);
+                        let privkey_base64 = base64::encode(privkey.to_bytes());
+                        (
+                            base64::encode(PublicKey::from(&privkey).as_bytes()),
+                            privkey_base64,
+                        )
+                    },
+                    |privkey_base64| {
+                        (
+                            match private_to_public_key(privkey_base64) {
+                                Ok(pubkey) => pubkey,
+                                Err(_) => {
+                                    println!("Invalid private key.");
+                                    std::process::exit(2)
                                 }
-                                .upload(&client, &login.token);
-                                (device.ipv4_address, device.ipv6_address)
                             },
-                            |device| (device.ipv4_address.clone(), device.ipv6_address.clone()),
-                        );
+                            privkey_base64.to_owned(),
+                        )
+                    },
+                );
+                let (ipv4_address, ipv6_address) = login
+                    .user
+                    .devices
+                    .iter()
+                    .find(|device| device.pubkey == pubkey_base64)
+                    .map_or_else(
+                        || {
+                            eprintln!("Public key not in device list, uploading it.");
+                            let device = NewDevice {
+                                name: save_m
+                                    .value_of("name")
+                                    .unwrap_or(&sys_info::hostname().unwrap()),
+                                pubkey: &pubkey_base64,
+                            }
+                            .upload(&client, &login.token);
+                            (device.ipv4_address, device.ipv6_address)
+                        },
+                        |device| (device.ipv4_address.clone(), device.ipv6_address.clone()),
+                    );
 
-                    let re = regex::Regex::new(save_m.value_of("regex").unwrap()).unwrap();
-                    let server_list = RelayList::new(client, &login.token);
-                    let filtered = server_list
-                        .countries
-                        .iter()
-                        .flat_map(|country| {
-                            country.cities.iter().flat_map(|city| city.relays.iter())
-                        })
-                        .filter(|server| re.is_match(&server.hostname));
-                    for server in if let Some(limit) =
-                        NonZeroUsize::new(save_m.value_of("limit").unwrap().parse().unwrap())
-                    {
-                        filtered.choose_multiple(&mut rng, limit.get())
-                    } else {
-                        filtered.collect()
-                    } {
-                        let path = std::path::Path::new(save_m.value_of("output").unwrap());
-                        std::fs::create_dir_all(&path).unwrap();
-                        let path = path.join(format!("{}.conf", server.hostname));
-                        std::fs::write(
-                            &path,
-                            format!(
-                                "[Interface]
-PrivateKey = {}
-Address = {},{}
-DNS = {}
-
-[Peer]
-PublicKey = {}
-AllowedIPs = 0.0.0.0/0,::0/0
-Endpoint = {}:{}\n",
-                                privkey_base64,
-                                ipv4_address,
-                                ipv6_address,
-                                IPV4_GATEWAY,
-                                server.public_key,
-                                server.ipv4_addr_in,
+                let re = regex::Regex::new(save_m.value_of("regex").unwrap()).unwrap();
+                let server_list = RelayList::new(client, &login.token);
+                let filtered = server_list
+                    .servers()
+                    .filter(|server| re.is_match(&server.hostname));
+                for server in if let Some(limit) =
+                    NonZeroUsize::new(save_m.value_of("limit").unwrap().parse().unwrap())
+                {
+                    filtered.choose_multiple(&mut rng, limit.get())
+                } else {
+                    filtered.collect()
+                } {
+                    let (ip, port) = {
+                        match save_m.value_of("hop") {
+                            Some(hop) => (
+                                server_list
+                                    .servers()
+                                    .find(|server| server.hostname == hop)
+                                    .unwrap()
+                                    .ipv4_addr_in,
+                                server.multihop_port,
+                            ),
+                            None => {
                                 // Deal with ranges
-                                {
+                                (server.ipv4_addr_in, {
                                     let mut ports =
                                         PORT_RANGES.iter().map(|(from, to)| (*from)..=(*to));
                                     let port_arg = save_m.value_of("port").unwrap();
@@ -514,16 +506,40 @@ Endpoint = {}:{}\n",
                                             std::process::exit(2);
                                         }
                                     }
-                                }
-                            ),
-                        )
-                        .unwrap();
-                        println!("Wrote configuration to {}.", path.to_str().unwrap());
-                    }
+                                })
+                            }
+                        }
+                    };
+                    let path = std::path::Path::new(save_m.value_of("output").unwrap());
+                    std::fs::create_dir_all(&path).unwrap();
+                    let path = path.join(format!("{}.conf", server.hostname));
+                    std::fs::write(
+                        &path,
+                        format!(
+                            "[Interface]
+PrivateKey = {}
+Address = {},{}
+DNS = {}
+
+[Peer]
+PublicKey = {}
+AllowedIPs = 0.0.0.0/0,::0/0
+Endpoint = {}:{}\n",
+                            privkey_base64,
+                            ipv4_address,
+                            ipv6_address,
+                            IPV4_GATEWAY,
+                            server.public_key,
+                            ip,
+                            port
+                        ),
+                    )
+                    .unwrap();
+                    println!("Wrote configuration to {}.", path.to_str().unwrap());
                 }
-                _ => unreachable!(),
             }
-        }
+            _ => unreachable!(),
+        },
         _ => {
             if !action_performed {
                 app().print_help().unwrap();
