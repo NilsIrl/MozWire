@@ -164,8 +164,6 @@ impl ServerList {
 }
 
 const BASE_URL: &str = "https://vpn.mozilla.org/api/v1";
-//const NAME_ARG: Arg = Arg::with_name("name");
-//const PRIVKEY_ARG: Arg = Arg::with_name("privkey").long("privkey").takes_value(true);
 
 fn app() -> clap::App<'static, 'static> {
     let name_arg = Arg::with_name("name")
