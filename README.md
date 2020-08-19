@@ -22,15 +22,9 @@ yay -S mozwire
 
 ### Using Nix
 `mozwire` is now packaged in
-[nixpkgs](https://github.com/NixOS/nixpkgs/pull/95754), however until
-the channels catch up, the following is recommended:
-
-```sh
-nix-env -iA package -f https://github.com/NilsIrl/MozWire/tarball/trunk
-```
-
-If your `nixpkgs-unstable` channel is up to date (`nix-channel
---update nixpkgs-unstable`), run
+[nixpkgs](https://github.com/NixOS/nixpkgs/pull/95754), make sure your
+`nixpkgs-unstable` channel is up to date (`nix-channel --update
+nixpkgs-unstable`), then run
 
 ```sh
 nix-env -i mozwire
