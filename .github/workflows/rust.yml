@@ -9,8 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: cargo fmt
-    - run: git diff-index --quiet HEAD -- || (git diff && exit 1)
+    - run: cargo fmt -- --check
   build:
     runs-on: ubuntu-latest
     steps:
