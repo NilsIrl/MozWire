@@ -108,6 +108,14 @@ struct Server {
     port_ranges: Vec<(u16, u16)>,
 }
 
+impl Server {
+    fn validate_hostname(&self) -> bool {
+        self.hostname
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-')
+    }
+}
+
 // latitude and longitude omitted
 #[derive(serde::Deserialize)]
 struct City {
@@ -132,13 +140,26 @@ struct ServerList {
 
 impl ServerList {
     fn new(client: reqwest::blocking::Client, token: &str) -> Self {
-        client
+        let server_list = client
             .get(&format!("{}/vpn/servers", BASE_URL))
             .bearer_auth(token)
             .send()
             .unwrap()
             .json::<ServerList>()
-            .unwrap()
+            .unwrap();
+        if let Some(server) = server_list
+            .countries
+            .iter()
+            .flat_map(|country| country.cities.iter().flat_map(|city| city.servers.iter()))
+            .find(|server| !server.validate_hostname())
+        {
+            eprintln!(
+                "A server contains invalid characters in its hostname: {}",
+                server.hostname
+            );
+            std::process::exit(3);
+        }
+        server_list
     }
 }
 
