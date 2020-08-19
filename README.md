@@ -10,6 +10,13 @@ Linux, macOS, FreeBSD, OpenBSD and others (all platforms supporting the
 WireGuard protocol) users access to this VPN provider. MozWire also supports
 Windows.
 
+## Features
+
+* Support for [multihop] servers (Not available on official clients)
+* Select custom remote port, bypassing firewalls (Not available on official clients)
+* Support for other operating systems (Not available on official clients)
+* Use "native" wireguard clients (Not available on official clients)
+
 ## Installation
 
 ### Using pre-built binaries from the CI (Linux, macOS and Windows) (Recommended)
@@ -125,4 +132,5 @@ Copyright © 2020 Nils André
 [AUR]: https://wiki.archlinux.org/index.php/Arch_User_Repository
 [AUR Helper]: https://wiki.archlinux.org/index.php/AUR_helpers
 [crates.io]: https://crates.io/crates/mozwire
+[multihop]: https://mullvad.net/en/help/multihop-wireguard/
 [release page]: https://github.com/NilsIrl/MozWire/releases
