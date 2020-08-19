@@ -20,6 +20,16 @@ can be installed using your favourite [AUR helper]:
 yay -S mozwire
 ```
 
+### Using Nix
+`mozwire` is now packaged in
+[nixpkgs](https://github.com/NixOS/nixpkgs/pull/95754), make sure your
+`nixpkgs-unstable` channel is up to date (`nix-channel --update
+nixpkgs-unstable`), then run
+
+```sh
+nix-env -i mozwire
+```
+
 ### Using `cargo install`
 
 #### From crates.io
