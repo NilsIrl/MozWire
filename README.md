@@ -40,7 +40,7 @@ yay -S mozwire
 nixpkgs-unstable`), then run
 
 ```sh
-nix-env -i mozwire
+nix-env -i MozWire
 ```
 
 ### Using `cargo install`
