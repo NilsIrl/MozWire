@@ -590,6 +590,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_ipv4_gateway() {
         let relays: Relays = reqwest::blocking::get("https://api.mullvad.net/app/v1/relays")
             .unwrap()
