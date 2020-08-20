@@ -7,7 +7,7 @@ authors = ["Nils <nils@nilsand.re>"]
 license = "GPL-3.0-or-later"
 repository = "https://github.com/NilsIrl/MozWire/"
 readme = "README.md"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2018"
 
 [profile.release]
