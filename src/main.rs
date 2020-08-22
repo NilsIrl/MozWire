@@ -1,6 +1,4 @@
 use clap::{AppSettings, Arg, SubCommand};
-// TODO remove unused `use` with clap v3
-use clap::{crate_authors, crate_description, crate_name, crate_version};
 use core::num::NonZeroUsize;
 use rand::seq::IteratorRandom;
 use std::fmt;
