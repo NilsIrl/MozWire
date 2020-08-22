@@ -15,7 +15,8 @@ Windows.
 * Support for [multihop] servers (Not available on official clients)
 * Select custom remote port, bypassing firewalls (Not available on official clients)
 * Support for other operating systems (Not available on official clients)
-* Use "native" wireguard clients (Not available on official clients)
+* Use "native" WireGuard clients with more customizability (Not available on official clients)
+* Works with [socks5 multihop]
 
 ## Installation
 
@@ -134,3 +135,4 @@ Copyright © 2020 Nils André
 [crates.io]: https://crates.io/crates/mozwire
 [multihop]: https://mullvad.net/en/help/multihop-wireguard/
 [release page]: https://github.com/NilsIrl/MozWire/releases
+[socks5 multihop]: https://mullvad.net/en/help/different-entryexit-node-using-wireguard-and-socks5-proxy/
