@@ -178,16 +178,24 @@ const PORT_RANGES: [(u16, u16); 4] = [(53, 53), (4000, 33433), (33565, 51820), (
 
 fn app() -> clap::App<'static, 'static> {
     let name_arg = Arg::with_name("name")
-        .help("Name linked with a public key. Defaults to the hostname of the system. This value has no effect on the functioning of the VPN.")
+        .help(
+            "Name linked with a public key. Defaults to the hostname of the system. This value \
+             has no effect on the functioning of the VPN.",
+        )
         .long("name");
     clap::app_from_crate!()
-        .after_help("To query MozillaVPN, mozwire requires a token, specified with --token. If it \
-        is left unspecified, mozwire will generate a token by opening a login page, the token \
-        generated can be printed using --print-token, so that it can be reused. To generate a \
-        WireGuard configuration use `mozwire relay save`.")
+        .after_help(
+            "To query MozillaVPN, mozwire requires a token, specified with --token. If it is left \
+             unspecified, mozwire will generate a token by opening a login page, the token \
+             generated can be printed using --print-token, so that it can be reused. To generate \
+             a WireGuard configuration use `mozwire relay save`.",
+        )
         .subcommand(
             SubCommand::with_name("device")
-                .about("Add, remove and list devices. To connect to MozillaVPN, a device needs to be on the list.")
+                .about(
+                    "Add, remove and list devices. To connect to MozillaVPN, a device needs to be \
+                     on the list.",
+                )
                 .subcommand(
                     SubCommand::with_name("add")
                         .about("List Devices")
@@ -198,7 +206,12 @@ fn app() -> clap::App<'static, 'static> {
                                 .conflicts_with("privkey")
                                 .required(true),
                         )
-                        .arg(Arg::with_name("privkey").long("privkey").takes_value(true).required_unless("pubkey"))
+                        .arg(
+                            Arg::with_name("privkey")
+                                .long("privkey")
+                                .takes_value(true)
+                                .required_unless("pubkey"),
+                        )
                         .arg(&name_arg),
                 )
                 .subcommand(
@@ -210,13 +223,22 @@ fn app() -> clap::App<'static, 'static> {
                     SubCommand::with_name("remove")
                         .alias("rm")
                         .about("Remove a device")
-                        .arg(Arg::with_name("ids").help("Public, private key or name of the device to remove.").required(true).takes_value(true).multiple(true))
+                        .arg(
+                            Arg::with_name("ids")
+                                .help("Public, private key or name of the device to remove.")
+                                .required(true)
+                                .takes_value(true)
+                                .multiple(true),
+                        ),
                 )
                 .setting(AppSettings::SubcommandRequiredElseHelp),
         )
         .subcommand(
             SubCommand::with_name("relay")
-                .about("List available relays (VPN Servers) and save WireGuard configurations for these.")
+                .about(
+                    "List available relays (VPN Servers) and save WireGuard configurations for \
+                     these.",
+                )
                 .subcommand(
                     SubCommand::with_name("list")
                         .alias("ls")
@@ -224,54 +246,99 @@ fn app() -> clap::App<'static, 'static> {
                 )
                 .subcommand(
                     SubCommand::with_name("save")
-                        .about("Save wireguard configuration for a MozillaVPN server. If the \
-                        private key used is not in the device list uploaded, mozwire will upload \
-                        it.")
+                        .about(
+                            "Save wireguard configuration for a MozillaVPN server. If the private \
+                             key used is not in the device list uploaded, mozwire will upload it.",
+                        )
                         .arg(
                             Arg::with_name("regex")
                                 .help("Regex to filter servers by hostname.")
                                 .default_value(""),
                         )
-                        .arg(Arg::with_name("output").short("o").help(
-                            "Directory in which to output the WireGuard configuration. Defaults to \
-                            the current directory",
-                        ).default_value("."))
                         .arg(
-                            Arg::with_name("privkey").long("privkey")
-                                .help("Private key to use in the configuration file. If it is not \
-                                    specified, mozwire will generate one and update the device list.").takes_value(true),
-                        ).arg(&name_arg).arg(
-                        Arg::with_name("port").long("port").short("p").default_value("51820")
-                        .help("Port to use. This can be changed to bypass firewalls and dissimulate \
-                        the use of WireGuard. A value of \"random\" will choose a random port \
-                        within the available range, which is the only available behaviour of the \
-                        windows MozillaVPN client."))
+                            Arg::with_name("output")
+                                .short("o")
+                                .help(
+                                    "Directory in which to output the WireGuard configuration. \
+                                     Defaults to the current directory",
+                                )
+                                .default_value("."),
+                        )
+                        .arg(
+                            Arg::with_name("privkey")
+                                .long("privkey")
+                                .help(
+                                    "Private key to use in the configuration file. If it is not \
+                                     specified, mozwire will generate one and update the device \
+                                     list.",
+                                )
+                                .takes_value(true),
+                        )
+                        .arg(&name_arg)
+                        .arg(
+                            Arg::with_name("port")
+                                .long("port")
+                                .short("p")
+                                .default_value("51820")
+                                .help(
+                                    "Port to use. This can be changed to bypass firewalls and \
+                                     dissimulate the use of WireGuard. A value of \"random\" will \
+                                     choose a random port within the available range, which is \
+                                     the only available behaviour of the windows MozillaVPN \
+                                     client.",
+                                ),
+                        )
                         .arg(
                             Arg::with_name("limit")
-                                .help("Limit the number of servers saved. A value of 0 disables the limit.")
+                                .help(
+                                    "Limit the number of servers saved. A value of 0 disables the \
+                                     limit.",
+                                )
                                 .short("n")
                                 .default_value("1"),
-                        ).arg(Arg::with_name("hop").help("Intermediate server (entry node) to connect to for multihop with wireguard.").takes_value(true).conflicts_with("port").long("hop"))
+                        )
+                        .arg(
+                            Arg::with_name("hop")
+                                .help(
+                                    "Intermediate server (entry node) to connect to for multihop \
+                                     with wireguard.",
+                                )
+                                .takes_value(true)
+                                .conflicts_with("port")
+                                .long("hop"),
+                        ),
                 )
                 .setting(AppSettings::SubcommandRequiredElseHelp),
         )
         .arg(
             Arg::with_name("print-token")
                 .long("print-token")
-                .help("Print the token used to query the Mozilla API, so that it can be reused with --token, without having to sign in each time.")
-                .global(true)
+                .help(
+                    "Print the token used to query the Mozilla API, so that it can be reused with \
+                     --token, without having to sign in each time.",
+                )
+                .global(true),
         )
         .arg(
             Arg::with_name("token")
                 .long("token")
                 .help(
-                    "The token used to communicate with the Mozilla API. If unspecified, a web page \
-                    will be opened to retrieve the token. the MOZ_TOKEN environment variable can \
-                    also be used instead.",
-                ).env("MOZ_TOKEN")
+                    "The token used to communicate with the Mozilla API. If unspecified, a web \
+                     page will be opened to retrieve the token. the MOZ_TOKEN environment \
+                     variable can also be used instead.",
+                )
+                .env("MOZ_TOKEN")
                 .global(true),
-        ).arg(
-        Arg::with_name("no-browser").long("no-browser").help("By default, mozwire will open the login page in a browser, this option prevents mozwire a browser page from being opened.").takes_value(false).global(true)
+        )
+        .arg(
+            Arg::with_name("no-browser")
+                .long("no-browser")
+                .help(
+                    "By default, mozwire will open the login page in a browser, this option \
+                     prevents mozwire a browser page from being opened.",
+                )
+                .takes_value(false)
+                .global(true),
         )
         .global_setting(AppSettings::ColoredHelp)
         .setting(AppSettings::ArgRequiredElseHelp)
