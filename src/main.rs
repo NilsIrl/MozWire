@@ -198,7 +198,10 @@ fn app() -> clap::App<'static, 'static> {
                 )
                 .subcommand(
                     SubCommand::with_name("add")
-                        .about("List Devices")
+                        .about(
+                            "Add a device to the device list, so it can be used to connect to \
+                             MozillaVPN",
+                        )
                         .arg(
                             Arg::with_name("pubkey")
                                 .long("pubkey")
