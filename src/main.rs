@@ -293,6 +293,16 @@ fn app() -> clap::App<'static, 'static> {
                                 ),
                         )
                         .arg(
+                            Arg::with_name("tunnel")
+                                .help(
+                                    "Select whether to tunnel both ipv4 and ipv6, only ipv4 or \
+                                     only ipv6.",
+                                )
+                                .long("tunnel")
+                                .possible_values(&["both", "ipv4", "ipv6"])
+                                .default_value("both"),
+                        )
+                        .arg(
                             Arg::with_name("limit")
                                 .help(
                                     "Limit the number of servers saved. A value of 0 disables the \
@@ -515,25 +525,38 @@ fn main() {
                         )
                     },
                 );
-                let (ipv4_address, ipv6_address) = login
-                    .user
-                    .devices
-                    .iter()
-                    .find(|device| device.pubkey == pubkey_base64)
-                    .map_or_else(
-                        || {
-                            eprintln!("Public key not in device list, uploading it.");
-                            let device = NewDevice {
-                                name: save_m
-                                    .value_of("name")
-                                    .unwrap_or(&sys_info::hostname().unwrap()),
-                                pubkey: &pubkey_base64,
-                            }
-                            .upload(&client, &login.token);
-                            (device.ipv4_address, device.ipv6_address)
-                        },
-                        |device| (device.ipv4_address.clone(), device.ipv6_address.clone()),
-                    );
+
+                let (address, allowed_ips) = {
+                    let (ipv4_address, ipv6_address) = login
+                        .user
+                        .devices
+                        .iter()
+                        .find(|device| device.pubkey == pubkey_base64)
+                        .map_or_else(
+                            || {
+                                eprintln!("Public key not in device list, uploading it.");
+                                let device = NewDevice {
+                                    name: save_m
+                                        .value_of("name")
+                                        .unwrap_or(&sys_info::hostname().unwrap()),
+                                    pubkey: &pubkey_base64,
+                                }
+                                .upload(&client, &login.token);
+                                (device.ipv4_address, device.ipv6_address)
+                            },
+                            |device| (device.ipv4_address.clone(), device.ipv6_address.clone()),
+                        );
+
+                    match save_m.value_of("tunnel").unwrap() {
+                        "both" => (
+                            format!("{},{}", &ipv4_address, &ipv6_address),
+                            "0.0.0.0/0,::0/0",
+                        ),
+                        "ipv4" => (ipv4_address, "0.0.0.0/0"),
+                        "ipv6" => (ipv6_address, "::0/0"),
+                        _ => unreachable!(),
+                    }
+                };
 
                 let re = regex::Regex::new(save_m.value_of("regex").unwrap()).unwrap();
                 let server_list = RelayList::new(client, &login.token);
@@ -589,18 +612,18 @@ fn main() {
                         format!(
                             "[Interface]
 PrivateKey = {}
-Address = {},{}
+Address = {}
 DNS = {}
 
 [Peer]
 PublicKey = {}
-AllowedIPs = 0.0.0.0/0,::0/0
+AllowedIPs = {}
 Endpoint = {}:{}\n",
                             privkey_base64,
-                            ipv4_address,
-                            ipv6_address,
+                            address,
                             IPV4_GATEWAY,
                             server.public_key,
+                            allowed_ips,
                             ip,
                             port
                         ),
