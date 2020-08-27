@@ -13,6 +13,7 @@ Windows.
 ## Features
 
 * Support for [multihop] servers (Not available on official clients)
+* Select individual servers (as opposed to being limited to choosing cities) (Not available on official clients)
 * Select custom remote port, bypassing firewalls (Not available on official clients)
 * Support for other operating systems (Not available on official clients)
 * Use "native" WireGuard clients with more customizability (Not available on official clients)
