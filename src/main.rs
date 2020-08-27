@@ -182,7 +182,8 @@ fn app() -> clap::App<'static, 'static> {
             "Name linked with a public key. Defaults to the hostname of the system. This value \
              has no effect on the functioning of the VPN.",
         )
-        .long("name");
+        .long("name")
+        .takes_value(true);
     clap::app_from_crate!()
         .after_help(
             "To query MozillaVPN, mozwire requires a token, specified with --token. If it is left \
