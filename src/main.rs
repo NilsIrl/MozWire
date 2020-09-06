@@ -436,7 +436,7 @@ fn main() {
                             std::process::exit(2)
                         }
                     },
-                    |pubkey| pubkey.to_owned(),
+                    str::to_owned,
                 );
                 println!(
                     "{}",
