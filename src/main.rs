@@ -320,6 +320,12 @@ fn app() -> clap::App<'static, 'static> {
                                 .takes_value(true)
                                 .conflicts_with("port")
                                 .long("hop"),
+                        )
+                        .arg(
+                            Arg::with_name("killswitch")
+                                .help("Enables a kill switch.")
+                                .long("killswitch")
+                                .takes_value(false),
                         ),
                 )
                 .setting(AppSettings::SubcommandRequiredElseHelp),
@@ -613,7 +619,7 @@ fn main() {
                             "[Interface]
 PrivateKey = {}
 Address = {}
-DNS = {}
+DNS = {}{}
 
 [Peer]
 PublicKey = {}
@@ -622,6 +628,18 @@ Endpoint = {}:{}\n",
                             privkey_base64,
                             address,
                             IPV4_GATEWAY,
+                            if save_m.is_present("killswitch") {
+                                "\nPostUp = iptables -I OUTPUT ! -o %i -m mark ! --mark $(wg show \
+                                 %i fwmark) -m addrtype ! --dst-type LOCAL -j REJECT && ip6tables \
+                                 -I OUTPUT ! -o %i -m mark ! --mark $(wg show %i fwmark) -m \
+                                 addrtype ! --dst-type LOCAL -j REJECT
+PreDown = iptables -D OUTPUT ! -o %i -m mark ! --mark $(wg show %i fwmark) -m addrtype ! \
+                                 --dst-type LOCAL -j REJECT && ip6tables -D OUTPUT ! -o %i -m mark \
+                                 ! --mark $(wg show %i fwmark) -m addrtype ! --dst-type LOCAL -j \
+                                 REJECT"
+                            } else {
+                                ""
+                            },
                             server.public_key,
                             allowed_ips,
                             ip,
