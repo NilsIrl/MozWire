@@ -18,6 +18,7 @@ Windows.
 * Support for other operating systems (Not available on official clients)
 * Use "native" WireGuard clients with more customizability (Not available on official clients)
 * Tunnel only IPv6 traffic (Not available on official clients)
+* Supports kill switch
 * Works with [socks5 multihop]
 
 ## Installation
