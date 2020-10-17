@@ -2,10 +2,17 @@ use clap::{AppSettings, Arg, SubCommand};
 // TODO remove unused `use` with clap v3
 use clap::{crate_authors, crate_description, crate_name, crate_version};
 use core::num::NonZeroUsize;
-use rand::seq::IteratorRandom;
 use std::fmt;
-use std::net::{Ipv4Addr, Ipv6Addr};
 use x25519_dalek::{PublicKey, StaticSecret};
+
+mod constants;
+mod relay;
+
+use constants::{BASE_URL, IPV4_GATEWAY, PORT_RANGES};
+
+use rand::seq::IteratorRandom;
+
+use relay::RelayList;
 
 #[derive(serde::Deserialize)]
 struct LoginURLs {
@@ -99,82 +106,6 @@ impl NewDevice<'_> {
         response.json::<Error>().unwrap().fail();
     }
 }
-
-// weight and include_in_country omitted
-#[derive(serde::Deserialize, Debug)]
-struct Relay {
-    hostname: String,
-    ipv4_addr_in: Ipv4Addr,
-    ipv6_addr_in: Ipv6Addr,
-    public_key: String,
-    multihop_port: u16,
-}
-
-impl Relay {
-    fn validate_hostname(&self) -> bool {
-        self.hostname
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '-')
-    }
-}
-
-// latitude and longitude omitted
-#[derive(serde::Deserialize)]
-struct City {
-    name: String,
-    code: String,
-    latitude: f64,
-    longitude: f64,
-    relays: Vec<Relay>,
-}
-
-#[derive(serde::Deserialize)]
-struct Country {
-    name: String,
-    code: String,
-    cities: Vec<City>,
-}
-
-#[derive(serde::Deserialize)]
-struct RelayList {
-    countries: Vec<Country>,
-}
-
-impl RelayList {
-    fn new(client: reqwest::blocking::Client, token: &str) -> Self {
-        let server_list = client
-            .get(RELAYLIST_URL)
-            .bearer_auth(token)
-            .send()
-            .unwrap()
-            .json::<RelayList>()
-            .unwrap();
-        if let Some(server) = server_list
-            .countries
-            .iter()
-            .flat_map(|country| country.cities.iter().flat_map(|city| city.relays.iter()))
-            .find(|server| !server.validate_hostname())
-        {
-            eprintln!(
-                "A server contains invalid characters in its hostname: {}",
-                server.hostname
-            );
-            std::process::exit(3);
-        }
-        server_list
-    }
-
-    fn servers(&self) -> impl Iterator<Item = &Relay> {
-        self.countries
-            .iter()
-            .flat_map(|country| country.cities.iter().flat_map(|city| city.relays.iter()))
-    }
-}
-
-const RELAYLIST_URL: &str = "https://api.mullvad.net/public/relays/wireguard/v1/";
-const BASE_URL: &str = "https://vpn.mozilla.org/api/v1";
-const IPV4_GATEWAY: Ipv4Addr = Ipv4Addr::new(10, 64, 0, 1);
-const PORT_RANGES: [(u16, u16); 4] = [(53, 53), (4000, 33433), (33565, 51820), (52000, 60000)];
 
 fn app() -> clap::App<'static, 'static> {
     let name_arg = Arg::with_name("name")
@@ -492,21 +423,7 @@ fn main() {
         },
         ("relay", Some(relay_m)) => match relay_m.subcommand() {
             ("list", ..) => {
-                for country in RelayList::new(client, &login.token).countries {
-                    println!("{} ({})", country.name, country.code);
-                    for city in country.cities {
-                        println!(
-                            "\t{} ({}) @ {}°N, {}°W",
-                            city.name, city.code, city.latitude, city.longitude
-                        );
-                        for server in city.relays {
-                            println!(
-                                "\t\t{} ({}, {})",
-                                server.hostname, server.ipv4_addr_in, server.ipv6_addr_in
-                            );
-                        }
-                    }
-                }
+                print!("{}", RelayList::new(client));
             }
             ("save", Some(save_m)) => {
                 let (pubkey_base64, privkey_base64) = save_m.value_of("privkey").map_or_else(
@@ -565,7 +482,7 @@ fn main() {
                 };
 
                 let re = regex::Regex::new(save_m.value_of("regex").unwrap()).unwrap();
-                let server_list = RelayList::new(client, &login.token);
+                let server_list = RelayList::new(client);
                 let filtered = server_list
                     .servers()
                     .filter(|server| re.is_match(&server.hostname));
@@ -688,27 +605,5 @@ mod tests {
             private_to_public_key("kCJuJAX+EWZ23tPK1b+Szl+m89TYxLh9ilIn+gDzZnc=").unwrap(),
             "nT4fmyCGntbuIetTOndAAF/b02p5GGj3MkOSb1wF1zY="
         );
-    }
-
-    #[derive(serde::Deserialize)]
-    struct Wireguard {
-        port_ranges: Vec<(u16, u16)>,
-        ipv4_gateway: Ipv4Addr,
-    }
-
-    #[derive(serde::Deserialize)]
-    struct Relays {
-        wireguard: Wireguard,
-    }
-
-    #[test]
-    #[ignore]
-    fn test_ipv4_gateway() {
-        let relays: Relays = reqwest::blocking::get("https://api.mullvad.net/app/v1/relays")
-            .unwrap()
-            .json()
-            .unwrap();
-        assert_eq!(relays.wireguard.ipv4_gateway, IPV4_GATEWAY);
-        assert_eq!(relays.wireguard.port_ranges, PORT_RANGES);
     }
 }
