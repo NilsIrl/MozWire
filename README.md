@@ -1,7 +1,7 @@
 # MozWire
 
 [![Crates.io](https://img.shields.io/crates/v/mozwire)][crates.io]
-[![GitHub All Releases](https://img.shields.io/github/downloads/NilsIrl/mozwire/total?label=Github%20Downloads)][release page]
+[![GitHub All Releases](https://img.shields.io/github/downloads/NilsIrl/mozwire/total?label=GitHub%20Downloads)][release page]
 [![Crates.io](https://img.shields.io/crates/d/mozwire?label=Crates.io%20Downloads)][crates.io]
 ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/NilsIrl/mozwire/Rust/trunk)
 
