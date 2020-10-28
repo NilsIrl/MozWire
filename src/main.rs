@@ -2,8 +2,6 @@ use clap::{AppSettings, Arg, SubCommand};
 // TODO remove unused `use` with clap v3
 use clap::{crate_authors, crate_description, crate_name, crate_version};
 use core::num::NonZeroUsize;
-use std::fmt;
-use x25519_dalek::{PublicKey, StaticSecret};
 
 mod constants;
 mod relay;
@@ -88,7 +86,7 @@ fn private_to_public_key(privkey_base64: &str) -> Result<String, base64::DecodeE
     let mut privkey = [0; 32];
     base64::decode_config_slice(privkey_base64, base64::STANDARD, &mut privkey)?;
     Ok(base64::encode(
-        PublicKey::from(&StaticSecret::from(privkey)).as_bytes(),
+        x25519_dalek::PublicKey::from(&x25519_dalek::StaticSecret::from(privkey)).as_bytes(),
     ))
 }
 
@@ -398,14 +396,14 @@ fn main() {
                         id == device.name
                             || id == device.pubkey
                             || private_to_public_key(id)
-                                .map_or(false, |pubkey| pubkey == device.pubkey)
+                                .map_or(false, |pubkey| pubkey.as_str() == device.pubkey)
                     }) {
                         client
                             .delete(&format!(
                                 "{}/vpn/device/{}",
                                 BASE_URL,
                                 percent_encoding::utf8_percent_encode(
-                                    &device.pubkey,
+                                    &base64::encode(device.pubkey.as_bytes()),
                                     percent_encoding::NON_ALPHANUMERIC
                                 )
                             ))
@@ -428,10 +426,10 @@ fn main() {
             ("save", Some(save_m)) => {
                 let (pubkey_base64, privkey_base64) = save_m.value_of("privkey").map_or_else(
                     || {
-                        let privkey = StaticSecret::new(&mut rand::rngs::OsRng);
+                        let privkey = x25519_dalek::StaticSecret::new(&mut rand::rngs::OsRng);
                         let privkey_base64 = base64::encode(privkey.to_bytes());
                         (
-                            base64::encode(PublicKey::from(&privkey).as_bytes()),
+                            base64::encode(x25519_dalek::PublicKey::from(&privkey).as_bytes()),
                             privkey_base64,
                         )
                     },
@@ -454,7 +452,7 @@ fn main() {
                         .user
                         .devices
                         .iter()
-                        .find(|device| device.pubkey == pubkey_base64)
+                        .find(|device| device.pubkey == &pubkey_base64)
                         .map_or_else(
                             || {
                                 eprintln!("Public key not in device list, uploading it.");

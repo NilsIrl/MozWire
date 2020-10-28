@@ -1,4 +1,4 @@
-use crate::constants::RELAYLIST_URL;
+use crate::constants::{EXPLOITATION_ATTEMPT_MESSAGE, RELAYLIST_URL};
 use serde::de;
 use std::{
     fmt,
@@ -7,17 +7,30 @@ use std::{
 
 struct PublicKeyVisitor;
 
+pub fn exploitation_attempt() {
+    println!("{}", EXPLOITATION_ATTEMPT_MESSAGE);
+    std::process::exit(1);
+}
+
 impl de::Visitor<'_> for PublicKeyVisitor {
     type Value = PublicKey;
+
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str(
-            "INVALID DATA RETURNED FROM SERVER POSSIBLE ATTEMPT AT EXPLOINTING SOMETHING",
-        )
+        formatter.write_str(EXPLOITATION_ATTEMPT_MESSAGE)
     }
 
     fn visit_bytes<E: de::Error>(self, v: &[u8]) -> Result<Self::Value, E> {
         let mut pubkey = [0; 32];
-        base64::decode_config_slice(v, base64::STANDARD, &mut pubkey).unwrap();
+        // 44 is the number of characters for a 256 bit base64 key
+        if v.len() != 44 {
+            exploitation_attempt();
+        }
+        match base64::decode_config_slice(v, base64::STANDARD, &mut pubkey) {
+            Ok(32) => (),
+            _ => {
+                exploitation_attempt();
+            }
+        };
         Ok(PublicKey(x25519_dalek::PublicKey::from(pubkey)))
     }
 }
@@ -35,6 +48,26 @@ impl fmt::Display for PublicKey {
 }
 
 pub struct PublicKey(x25519_dalek::PublicKey);
+
+impl PartialEq<&str> for PublicKey {
+    fn eq(&self, other: &&str) -> bool {
+        base64::encode(self.as_bytes()) == *other
+    }
+}
+
+impl PartialEq<PublicKey> for &str {
+    fn eq(&self, other: &PublicKey) -> bool {
+        base64::encode(other.as_bytes()) == *self
+    }
+}
+
+impl std::ops::Deref for PublicKey {
+    type Target = x25519_dalek::PublicKey;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 // weight and include_in_country omitted
 #[derive(serde::Deserialize)]

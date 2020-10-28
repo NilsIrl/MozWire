@@ -4,6 +4,9 @@ pub const RELAYLIST_URL: &str = "https://api.mullvad.net/public/relays/wireguard
 pub const BASE_URL: &str = "https://vpn.mozilla.org/api/v1";
 pub const IPV4_GATEWAY: Ipv4Addr = Ipv4Addr::new(10, 64, 0, 1);
 pub const PORT_RANGES: [(u16, u16); 4] = [(53, 53), (4000, 33433), (33565, 51820), (52000, 60000)];
+pub const EXPLOITATION_ATTEMPT_MESSAGE: &str = "INVALID DATA RETURNED FROM SERVER, THE CONTENT \
+                                                COULD HAVE BEEN TEMPERED IN AN ATTEMPT AT \
+                                                EXPLOITING VULNERABILITIES";
 
 #[cfg(test)]
 mod tests {
