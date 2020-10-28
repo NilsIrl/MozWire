@@ -93,7 +93,7 @@ mozwire .... # mozwire commands can be run without having to log in
 [![asciicast](https://asciinema.org/a/wQgorg0PgkrjI52NSWEdzdQ7U.svg)](https://asciinema.org/a/wQgorg0PgkrjI52NSWEdzdQ7U)
 
 ```
-mozwire 0.5.2
+mozwire 0.6.0
 Nils <nils@nilsand.re>
 MozillaVPN wireguard configuration manager
 
