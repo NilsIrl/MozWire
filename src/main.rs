@@ -7,19 +7,12 @@ mod constants;
 mod device;
 mod relay;
 
-use constants::{BASE_URL, IPV4_GATEWAY, PORT_RANGES};
+use constants::{BASE_URL, IPV4_GATEWAY, PORT_RANGES, V1_API, V2_API};
 
 use rand::seq::IteratorRandom;
 
 use device::Device;
 use relay::RelayList;
-
-#[derive(serde::Deserialize)]
-struct LoginURLs {
-    login_url: String,
-    verification_url: String,
-    poll_interval: u64,
-}
 
 #[derive(serde::Deserialize)]
 struct User {
@@ -77,7 +70,7 @@ fn private_to_public_key(privkey_base64: &str) -> Result<String, base64::DecodeE
 impl NewDevice<'_> {
     fn upload(self, client: &reqwest::blocking::Client, token: &str) -> Device {
         let response = client
-            .post(&format!("{}/vpn/device", BASE_URL))
+            .post(&format!("{}{}/vpn/device", BASE_URL, V1_API))
             .bearer_auth(token)
             .json(&self)
             .send()
@@ -277,6 +270,12 @@ fn app() -> clap::App<'static, 'static> {
         .setting(AppSettings::ArgRequiredElseHelp)
 }
 
+#[derive(serde::Serialize)]
+struct AccessTokenRequest<'a> {
+    code: &'a str,
+    code_verifier: &'a str,
+}
+
 fn main() {
     let matches = app().get_matches();
 
@@ -288,40 +287,64 @@ fn main() {
 
     let login = matches.value_of("token").map_or_else(
         || {
-            let login = client
-                .post(&format!("{}/vpn/login", BASE_URL))
-                .send()
-                .unwrap()
-                .json::<LoginURLs>()
-                .unwrap();
+            // no token given
+            use rand::RngCore;
+            use sha2::Digest;
+            let mut code_verifier_random = [0u8; 32];
+            rand::rngs::OsRng.fill_bytes(&mut code_verifier_random);
+            let mut code_verifier = [0u8; 43];
+            base64::encode_config_slice(
+                code_verifier_random,
+                base64::URL_SAFE_NO_PAD,
+                &mut code_verifier,
+            );
+            let mut code_challenge = String::with_capacity(43);
+            base64::encode_config_buf(
+                sha2::Sha256::digest(&code_verifier),
+                base64::URL_SAFE_NO_PAD,
+                &mut code_challenge,
+            );
 
-            eprint!("Please visit {}.", login.login_url);
+            let login_url = format!(
+                "{}{}/vpn/login/windows?code_challenge_method=S256&code_challenge={}",
+                BASE_URL, V2_API, code_challenge
+            );
+            eprint!("Please visit {}.", login_url);
             if !matches.is_present("no-browser") {
-                match webbrowser::open(&login.login_url) {
+                match webbrowser::open(&login_url) {
                     Ok(_) => eprint!(" Link opened in browser."),
                     Err(_) => eprint!(" Failed to open link in browser, please visit it manually."),
                 }
             }
             eprintln!();
 
-            let poll_interval = std::time::Duration::from_secs(login.poll_interval);
-            loop {
-                let response = client.get(&login.verification_url).send().unwrap();
-                if response.status() == reqwest::StatusCode::OK {
-                    eprintln!("Login successful");
-                    break response.json::<Login>().unwrap();
-                } else {
-                    match response.json::<Error>().unwrap() {
-                        Error { errno: 126, .. } => {}
-                        error => error.fail(),
+            let mut code_input = String::new();
+            let code_regex = regex::Regex::new(r"[0-9a-f]{80}").unwrap();
+            let code = loop {
+                eprint!("Please enter the URL you are redirected to after having logged in: ");
+                std::io::stdin().read_line(&mut code_input).unwrap();
+                match code_regex.find(&code_input) {
+                    Some(code) => break code,
+                    None => {
+                        continue;
                     }
-                }
-                std::thread::sleep(poll_interval);
-            }
+                };
+            };
+
+            client
+                .post(&format!("{}{}/vpn/login/verify", BASE_URL, V2_API))
+                .json(&AccessTokenRequest {
+                    code: code.as_str(),
+                    code_verifier: std::str::from_utf8(&code_verifier).unwrap(),
+                })
+                .send()
+                .unwrap()
+                .json()
+                .unwrap()
         },
         |token| {
             let response = client
-                .get(&format!("{}/vpn/account", BASE_URL))
+                .get(&format!("{}{}/vpn/account", BASE_URL, V1_API))
                 .bearer_auth(token.trim())
                 .send()
                 .unwrap();
@@ -384,8 +407,9 @@ fn main() {
                     }) {
                         client
                             .delete(&format!(
-                                "{}/vpn/device/{}",
+                                "{}{}/vpn/device/{}",
                                 BASE_URL,
+                                V1_API,
                                 percent_encoding::utf8_percent_encode(
                                     &base64::encode(device.pubkey.as_bytes()),
                                     percent_encoding::NON_ALPHANUMERIC
