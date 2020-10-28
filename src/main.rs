@@ -4,12 +4,14 @@ use clap::{crate_authors, crate_description, crate_name, crate_version};
 use core::num::NonZeroUsize;
 
 mod constants;
+mod device;
 mod relay;
 
 use constants::{BASE_URL, IPV4_GATEWAY, PORT_RANGES};
 
 use rand::seq::IteratorRandom;
 
+use device::Device;
 use relay::RelayList;
 
 #[derive(serde::Deserialize)]
@@ -62,24 +64,6 @@ impl Error {
 struct NewDevice<'a> {
     name: &'a str,
     pubkey: &'a str,
-}
-
-#[derive(serde::Deserialize)]
-struct Device {
-    name: String,
-    pubkey: String,
-    ipv4_address: String,
-    ipv6_address: String,
-}
-
-impl fmt::Display for Device {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "- {}: {}, {},{}",
-            self.name, self.pubkey, self.ipv4_address, self.ipv6_address
-        )
-    }
 }
 
 fn private_to_public_key(privkey_base64: &str) -> Result<String, base64::DecodeError> {
@@ -470,11 +454,11 @@ fn main() {
 
                     match save_m.value_of("tunnel").unwrap() {
                         "both" => (
-                            format!("{},{}", &ipv4_address, &ipv6_address),
+                            format!("{},{}", &ipv4_address.0, &ipv6_address.0),
                             "0.0.0.0/0,::0/0",
                         ),
-                        "ipv4" => (ipv4_address, "0.0.0.0/0"),
-                        "ipv6" => (ipv6_address, "::0/0"),
+                        "ipv4" => (ipv4_address.0, "0.0.0.0/0"),
+                        "ipv6" => (ipv6_address.0, "::0/0"),
                         _ => unreachable!(),
                     }
                 };
