@@ -305,10 +305,18 @@ fn main() {
                 &mut code_challenge,
             );
 
+            use tiny_http::{Method, Server};
+
+            let server = Server::http("127.0.0.1:0").unwrap();
+
             let login_url = format!(
-                "{}{}/vpn/login/windows?code_challenge_method=S256&code_challenge={}",
-                BASE_URL, V2_API, code_challenge
+                "{}{}/vpn/login/linux?code_challenge_method=S256&code_challenge={}&port={}",
+                BASE_URL,
+                V2_API,
+                code_challenge,
+                server.server_addr().port()
             );
+
             eprint!("Please visit {}.", login_url);
             if !matches.is_present("no-browser") {
                 match webbrowser::open(&login_url) {
@@ -318,29 +326,29 @@ fn main() {
             }
             eprintln!();
 
-            let mut code_input = String::new();
-            let code_regex = regex::Regex::new(r"[0-9a-f]{80}").unwrap();
-            let code = loop {
-                eprint!("Please enter the URL you are redirected to after having logged in: ");
-                std::io::stdin().read_line(&mut code_input).unwrap();
-                match code_regex.find(&code_input) {
-                    Some(code) => break code,
-                    None => {
-                        continue;
+            let code;
+            let code_url_regex = regex::Regex::new(r"\A/\?code=([0-9a-f]{80})\z").unwrap();
+            for request in server.incoming_requests() {
+                if *request.method() == Method::Get {
+                    match code_url_regex.captures(request.url()) {
+                        Some(caps) => {
+                            code = caps.get(1).unwrap();
+                            return client
+                                .post(&format!("{}{}/vpn/login/verify", BASE_URL, V2_API))
+                                .json(&AccessTokenRequest {
+                                    code: code.as_str(),
+                                    code_verifier: std::str::from_utf8(&code_verifier).unwrap(),
+                                })
+                                .send()
+                                .unwrap()
+                                .json()
+                                .unwrap();
+                        }
+                        None => (),
                     }
-                };
-            };
-
-            client
-                .post(&format!("{}{}/vpn/login/verify", BASE_URL, V2_API))
-                .json(&AccessTokenRequest {
-                    code: code.as_str(),
-                    code_verifier: std::str::from_utf8(&code_verifier).unwrap(),
-                })
-                .send()
-                .unwrap()
-                .json()
-                .unwrap()
+                }
+            }
+            unreachable!("Server closed without receiving code")
         },
         |token| {
             let response = client
