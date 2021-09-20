@@ -108,3 +108,9 @@ jobs:
         asset_name: mozwire-windows.exe
         asset_path: mozwire-Windows/mozwire.exe
         asset_content_type: application/octet-stream
+    - uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_name: mozwire-windows-aarch64.exe
+        asset_path: mozwire-windows-aarch64/mozwire.exe
+        asset_content_type: application/octet-stream
