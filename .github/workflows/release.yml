@@ -2,14 +2,25 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
 
 env:
   CARGO_TERM_COLOR: always
   CARGO_TERM_VERBOSE: true
 
 jobs:
+  build-windows-aarch64:
+    runs-on: windows-latest
+    env:
+      CARGO_BUILD_TARGET: aarch64-pc-windows-msvc
+      RUSTFLAGS: "-C target-feature=+crt-static"
+    steps:
+    - uses: actions/checkout@v2
+    - run: rustup target add $Env:CARGO_BUILD_TARGET
+    - run: cargo build --release
+    - uses: actions/upload-artifact@v2
+      with:
+        name: mozwire-windows-aarch64
+        path: target/aarch64-pc-windows-msvc/release/mozwire.exe
   build-windows:
     runs-on: windows-latest
     env:
