@@ -25,6 +25,6 @@ reqwest = { version = "0.10.7", default-features = false, features = ["rustls-tl
 serde = { version = "1.0.115", features = ["derive"] }
 sha2 = "0.9.1"
 sys-info = "0.7.0"
-tiny_http = "0.7.0"
+tiny_http = "0.8.0"
 webbrowser = "0.5.5"
 x25519-dalek = "0.6.0"
