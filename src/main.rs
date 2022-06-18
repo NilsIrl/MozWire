@@ -132,10 +132,10 @@ fn app() -> clap::App<'static, 'static> {
                 .subcommand(
                     SubCommand::with_name("remove")
                         .alias("rm")
-                        .about("Remove a device")
+                        .about("Remove one or multiple devices")
                         .arg(
                             Arg::with_name("ids")
-                                .help("Public, private key or name of the device to remove.")
+                                .help("Public, private key or name of the device(s) to remove.")
                                 .required(true)
                                 .takes_value(true)
                                 .multiple(true),
