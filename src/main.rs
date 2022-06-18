@@ -560,14 +560,9 @@ Endpoint = {}:{}\n",
                             address,
                             IPV4_GATEWAY,
                             if save_m.is_present("killswitch") {
-                                "\nPostUp = iptables -I OUTPUT ! -o %i -m mark ! --mark $(wg show \
-                                 %i fwmark) -m addrtype ! --dst-type LOCAL -j REJECT && ip6tables \
-                                 -I OUTPUT ! -o %i -m mark ! --mark $(wg show %i fwmark) -m \
-                                 addrtype ! --dst-type LOCAL -j REJECT
-PreDown = iptables -D OUTPUT ! -o %i -m mark ! --mark $(wg show %i fwmark) -m addrtype ! \
-                                 --dst-type LOCAL -j REJECT && ip6tables -D OUTPUT ! -o %i -m mark \
-                                 ! --mark $(wg show %i fwmark) -m addrtype ! --dst-type LOCAL -j \
-                                 REJECT"
+                                #[rustfmt::skip]
+                                "\nPostUp = iptables -I OUTPUT ! -o %i -m mark ! --mark $(wg show %i fwmark) -m addrtype ! --dst-type LOCAL -j REJECT && ip6tables -I OUTPUT ! -o %i -m mark ! --mark $(wg show %i fwmark) -m addrtype ! --dst-type LOCAL -j REJECT
+PreDown = iptables -D OUTPUT ! -o %i -m mark ! --mark $(wg show %i fwmark) -m addrtype ! --dst-type LOCAL -j REJECT && ip6tables -D OUTPUT ! -o %i -m mark ! --mark $(wg show %i fwmark) -m addrtype ! --dst-type LOCAL -j REJECT"
                             } else {
                                 ""
                             },
