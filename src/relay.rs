@@ -49,15 +49,15 @@ impl fmt::Display for PublicKey {
 
 pub struct PublicKey(x25519_dalek::PublicKey);
 
-impl PartialEq<&str> for PublicKey {
-    fn eq(&self, other: &&str) -> bool {
+impl PartialEq<String> for PublicKey {
+    fn eq(&self, other: &String) -> bool {
         base64::encode(self.as_bytes()) == *other
     }
 }
 
-impl PartialEq<PublicKey> for &str {
+impl PartialEq<PublicKey> for String {
     fn eq(&self, other: &PublicKey) -> bool {
-        base64::encode(other.as_bytes()) == *self
+        other == self
     }
 }
 

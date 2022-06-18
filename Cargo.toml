@@ -16,7 +16,7 @@ codegen-units = 1
 
 [dependencies]
 base64 = "0.12.3"
-clap = { version = "2.33.3", features = ["color", "wrap_help"] }
+clap = { version = "3.2.5", features = ["color", "derive", "env", "wrap_help"] }
 hostname = "0.3.1"
 percent-encoding = "2.1.0"
 rand = "0.7.3"

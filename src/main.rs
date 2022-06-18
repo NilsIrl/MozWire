@@ -1,11 +1,11 @@
-use clap::{AppSettings, Arg, SubCommand};
-// TODO remove unused `use` with clap v3
-use clap::{crate_authors, crate_description, crate_name, crate_version};
 use core::num::NonZeroUsize;
 
+mod cli;
 mod constants;
 mod device;
 mod relay;
+
+use crate::cli::{Cli, Commands, DeviceCommands, Port, RelayCommands, Tunnel};
 
 use constants::{BASE_URL, IPV4_GATEWAY, PORT_RANGES, V1_API, V2_API};
 
@@ -13,6 +13,8 @@ use rand::seq::IteratorRandom;
 
 use device::Device;
 use relay::RelayList;
+
+use clap::Parser;
 
 #[derive(serde::Deserialize)]
 struct User {
@@ -82,194 +84,6 @@ impl NewDevice<'_> {
     }
 }
 
-fn app() -> clap::App<'static, 'static> {
-    let name_arg = Arg::with_name("name")
-        .help(
-            "Name linked with a public key. Defaults to the hostname of the system. This value \
-             has no effect on the functioning of the VPN.",
-        )
-        .long("name")
-        .takes_value(true);
-    clap::app_from_crate!()
-        .after_help(
-            "To query MozillaVPN, mozwire requires a token, specified with --token. If it is left \
-             unspecified, mozwire will generate a token by opening a login page, the token \
-             generated can be printed using --print-token, so that it can be reused. To generate \
-             a WireGuard configuration use `mozwire relay save`.",
-        )
-        .subcommand(
-            SubCommand::with_name("device")
-                .about(
-                    "Add, remove and list devices. To connect to MozillaVPN, a device needs to be \
-                     on the list.",
-                )
-                .subcommand(
-                    SubCommand::with_name("add")
-                        .about(
-                            "Add a device to the device list, so it can be used to connect to \
-                             MozillaVPN",
-                        )
-                        .arg(
-                            Arg::with_name("pubkey")
-                                .long("pubkey")
-                                .takes_value(true)
-                                .conflicts_with("privkey")
-                                .required(true),
-                        )
-                        .arg(
-                            Arg::with_name("privkey")
-                                .long("privkey")
-                                .takes_value(true)
-                                .required_unless("pubkey"),
-                        )
-                        .arg(&name_arg),
-                )
-                .subcommand(
-                    SubCommand::with_name("list")
-                        .alias("ls")
-                        .about("List devices"),
-                )
-                .subcommand(
-                    SubCommand::with_name("remove")
-                        .alias("rm")
-                        .about("Remove one or multiple devices")
-                        .arg(
-                            Arg::with_name("ids")
-                                .help("Public, private key or name of the device(s) to remove.")
-                                .required(true)
-                                .takes_value(true)
-                                .multiple(true),
-                        ),
-                )
-                .setting(AppSettings::SubcommandRequiredElseHelp),
-        )
-        .subcommand(
-            SubCommand::with_name("relay")
-                .about(
-                    "List available relays (VPN Servers) and save WireGuard configurations for \
-                     these.",
-                )
-                .subcommand(
-                    SubCommand::with_name("list")
-                        .alias("ls")
-                        .about("List relays"),
-                )
-                .subcommand(
-                    SubCommand::with_name("save")
-                        .about(
-                            "Save wireguard configuration for a MozillaVPN server. If the private \
-                             key used is not in the device list uploaded, mozwire will upload it.",
-                        )
-                        .arg(
-                            Arg::with_name("regex")
-                                .help("Regex to filter servers by hostname.")
-                                .default_value(""),
-                        )
-                        .arg(
-                            Arg::with_name("output")
-                                .short("o")
-                                .help(
-                                    "Directory in which to output the WireGuard configuration. \
-                                     Defaults to the current directory",
-                                )
-                                .default_value("."),
-                        )
-                        .arg(
-                            Arg::with_name("privkey")
-                                .long("privkey")
-                                .help(
-                                    "Private key to use in the configuration file. If it is not \
-                                     specified, mozwire will generate one and update the device \
-                                     list.",
-                                )
-                                .takes_value(true),
-                        )
-                        .arg(&name_arg)
-                        .arg(
-                            Arg::with_name("port")
-                                .long("port")
-                                .short("p")
-                                .default_value("51820")
-                                .help(
-                                    "Port to use. This can be changed to bypass firewalls and \
-                                     dissimulate the use of WireGuard. A value of \"random\" will \
-                                     choose a random port within the available range, which is \
-                                     the only available behaviour of the windows MozillaVPN \
-                                     client.",
-                                ),
-                        )
-                        .arg(
-                            Arg::with_name("tunnel")
-                                .help(
-                                    "Select whether to tunnel both ipv4 and ipv6, only ipv4 or \
-                                     only ipv6.",
-                                )
-                                .long("tunnel")
-                                .possible_values(&["both", "ipv4", "ipv6"])
-                                .default_value("both"),
-                        )
-                        .arg(
-                            Arg::with_name("limit")
-                                .help(
-                                    "Limit the number of servers saved. A value of 0 disables the \
-                                     limit.",
-                                )
-                                .short("n")
-                                .default_value("1"),
-                        )
-                        .arg(
-                            Arg::with_name("hop")
-                                .help(
-                                    "Intermediate server (entry node) to connect to for multihop \
-                                     with wireguard.",
-                                )
-                                .takes_value(true)
-                                .conflicts_with("port")
-                                .long("hop"),
-                        )
-                        .arg(
-                            Arg::with_name("killswitch")
-                                .help("Enables a kill switch.")
-                                .long("killswitch")
-                                .takes_value(false),
-                        ),
-                )
-                .setting(AppSettings::SubcommandRequiredElseHelp),
-        )
-        .arg(
-            Arg::with_name("print-token")
-                .long("print-token")
-                .help(
-                    "Print the token used to query the Mozilla API, so that it can be reused with \
-                     --token, without having to sign in each time.",
-                )
-                .global(true),
-        )
-        .arg(
-            Arg::with_name("token")
-                .long("token")
-                .help(
-                    "The token used to communicate with the Mozilla API. If unspecified, a web \
-                     page will be opened to retrieve the token. the MOZ_TOKEN environment \
-                     variable can also be used instead.",
-                )
-                .env("MOZ_TOKEN")
-                .global(true),
-        )
-        .arg(
-            Arg::with_name("no-browser")
-                .long("no-browser")
-                .help(
-                    "By default, mozwire will open the login page in a browser, this option \
-                     prevents mozwire a browser page from being opened.",
-                )
-                .takes_value(false)
-                .global(true),
-        )
-        .global_setting(AppSettings::ColoredHelp)
-        .setting(AppSettings::ArgRequiredElseHelp)
-}
-
 #[derive(serde::Serialize)]
 struct AccessTokenRequest<'a> {
     code: &'a str,
@@ -277,7 +91,13 @@ struct AccessTokenRequest<'a> {
 }
 
 fn main() {
-    let matches = app().get_matches();
+    let matches = Cli::parse();
+
+    if matches.command.is_none() && !matches.print_token {
+        use clap::CommandFactory;
+        Cli::command().print_help().unwrap();
+        std::process::exit(2);
+    }
 
     let client = reqwest::blocking::Client::builder()
         // Some operations fail when no User-Agent is present
@@ -285,7 +105,7 @@ fn main() {
         .build()
         .unwrap();
 
-    let login = matches.value_of("token").map_or_else(
+    let login = matches.token.as_ref().map_or_else(
         || {
             // no token given
             use rand::RngCore;
@@ -318,7 +138,7 @@ fn main() {
             );
 
             eprint!("Please visit {}.", login_url);
-            if !matches.is_present("no-browser") {
+            if !matches.no_browser {
                 match webbrowser::open(&login_url) {
                     Ok(_) => eprint!(" Link opened in browser."),
                     Err(_) => eprint!(" Failed to open link in browser, please visit it manually."),
@@ -367,51 +187,48 @@ fn main() {
         },
     );
 
-    let mut action_performed = false;
-    if matches.is_present("print-token") {
-        action_performed = true;
+    if matches.print_token {
         println!("{}", login.token);
     }
 
     let mut rng = rand::thread_rng();
 
-    match matches.subcommand() {
-        ("device", Some(device_m)) => match device_m.subcommand() {
-            ("add", Some(sub_m)) => {
-                let pubkey = sub_m.value_of("pubkey").map_or_else(
-                    || match private_to_public_key(sub_m.value_of("privkey").unwrap()) {
-                        Ok(pubkey) => pubkey,
-                        Err(_) => {
-                            println!("Invalid private key.");
-                            std::process::exit(2)
-                        }
-                    },
-                    str::to_owned,
-                );
+    match matches.command {
+        Some(Commands::Device { command: device_m }) => match device_m {
+            DeviceCommands::Add {
+                pubkey,
+                privkey,
+                name,
+            } => {
+                let pubkey = pubkey.unwrap_or(match private_to_public_key(&privkey.unwrap()) {
+                    Ok(pubkey) => pubkey,
+                    Err(_) => {
+                        println!("Invalid private key.");
+                        std::process::exit(2)
+                    }
+                });
                 println!(
                     "{}",
                     &NewDevice {
-                        name: sub_m
-                            .value_of("name")
-                            .unwrap_or(&sys_info::hostname().unwrap()),
+                        name: &name.name,
                         pubkey: &pubkey,
                     }
                     .upload(&client, &login.token),
                 );
             }
-            ("list", ..) => {
+            DeviceCommands::List => {
                 eprintln!("Devices:");
                 for device in login.user.devices {
                     println!("{}", device)
                 }
             }
-            ("remove", Some(sub_m)) => {
-                for id in sub_m.values_of("ids").unwrap() {
+            DeviceCommands::Remove { ids } => {
+                for id in ids {
                     for device in login.user.devices.iter().filter(|device| {
                         id == device.name
                             || id == device.pubkey
-                            || private_to_public_key(id)
-                                .map_or(false, |pubkey| pubkey.as_str() == device.pubkey)
+                            || private_to_public_key(&id)
+                                .map_or(false, |pubkey| device.pubkey == pubkey)
                     }) {
                         client
                             .delete(&format!(
@@ -433,14 +250,24 @@ fn main() {
                     }
                 }
             }
-            _ => unreachable!(),
         },
-        ("relay", Some(relay_m)) => match relay_m.subcommand() {
-            ("list", ..) => {
+        Some(Commands::Relay { command: relay_m }) => match relay_m {
+            RelayCommands::List => {
                 print!("{}", RelayList::new(client));
             }
-            ("save", Some(save_m)) => {
-                let (pubkey_base64, privkey_base64) = save_m.value_of("privkey").map_or_else(
+            RelayCommands::Save {
+                regex,
+                killswitch,
+                output,
+                name,
+                limit,
+                privkey,
+                tunnel,
+                hop,
+                port,
+                ..
+            } => {
+                let (pubkey_base64, privkey_base64) = privkey.map_or_else(
                     || {
                         let privkey = x25519_dalek::StaticSecret::new(&mut rand::rngs::OsRng);
                         let privkey_base64 = base64::encode(privkey.to_bytes());
@@ -451,7 +278,7 @@ fn main() {
                     },
                     |privkey_base64| {
                         (
-                            match private_to_public_key(privkey_base64) {
+                            match private_to_public_key(&privkey_base64) {
                                 Ok(pubkey) => pubkey,
                                 Err(_) => {
                                     println!("Invalid private key.");
@@ -468,14 +295,12 @@ fn main() {
                         .user
                         .devices
                         .iter()
-                        .find(|device| device.pubkey == &pubkey_base64)
+                        .find(|device| device.pubkey == pubkey_base64)
                         .map_or_else(
                             || {
                                 eprintln!("Public key not in device list, uploading it.");
                                 let device = NewDevice {
-                                    name: save_m
-                                        .value_of("name")
-                                        .unwrap_or(&sys_info::hostname().unwrap()),
+                                    name: &name.name,
                                     pubkey: &pubkey_base64,
                                 }
                                 .upload(&client, &login.token);
@@ -484,35 +309,31 @@ fn main() {
                             |device| (device.ipv4_address.clone(), device.ipv6_address.clone()),
                         );
 
-                    match save_m.value_of("tunnel").unwrap() {
-                        "both" => (
+                    match tunnel {
+                        Tunnel::Both => (
                             format!("{},{}", &ipv4_address.0, &ipv6_address.0),
                             "0.0.0.0/0,::0/0",
                         ),
-                        "ipv4" => (ipv4_address.0, "0.0.0.0/0"),
-                        "ipv6" => (ipv6_address.0, "::0/0"),
-                        _ => unreachable!(),
+                        Tunnel::Ipv4 => (ipv4_address.0, "0.0.0.0/0"),
+                        Tunnel::Ipv6 => (ipv6_address.0, "::0/0"),
                     }
                 };
 
-                let re = regex::Regex::new(save_m.value_of("regex").unwrap()).unwrap();
                 let server_list = RelayList::new(client);
                 let filtered = server_list
                     .servers()
-                    .filter(|server| re.is_match(&server.hostname));
-                for server in if let Some(limit) =
-                    NonZeroUsize::new(save_m.value_of("limit").unwrap().parse().unwrap())
-                {
+                    .filter(|server| regex.is_match(&server.hostname));
+                for server in if let Some(limit) = NonZeroUsize::new(limit) {
                     filtered.choose_multiple(&mut rng, limit.get())
                 } else {
                     filtered.collect()
                 } {
                     let (ip, port) = {
-                        match save_m.value_of("hop") {
-                            Some(hop) => (
+                        match hop {
+                            Some(ref hop) => (
                                 server_list
                                     .servers()
-                                    .find(|server| server.hostname == hop)
+                                    .find(|server| server.hostname == *hop)
                                     .unwrap()
                                     .ipv4_addr_in,
                                 server.multihop_port,
@@ -522,26 +343,26 @@ fn main() {
                                 (server.ipv4_addr_in, {
                                     let mut ports =
                                         PORT_RANGES.iter().map(|(from, to)| (*from)..=(*to));
-                                    let port_arg = save_m.value_of("port").unwrap();
-                                    if port_arg == "random" {
-                                        ports.flatten().choose(&mut rng).unwrap()
-                                    } else {
-                                        let port = port_arg.parse().unwrap();
-                                        if ports.any(|range| range.contains(&port)) {
-                                            port
-                                        } else {
-                                            println!(
-                                                "{} is outside of the usable port range.",
-                                                port
-                                            );
-                                            std::process::exit(2);
+                                    match port {
+                                        Port::Random => ports.flatten().choose(&mut rng).unwrap(),
+                                        Port::Port(port_number) => {
+                                            if ports.any(|range| range.contains(&port_number)) {
+                                                port_number
+                                            } else {
+                                                println!(
+                                                    "{} is outside of the usable port range.",
+                                                    port_number
+                                                );
+                                                std::process::exit(2);
+                                            }
                                         }
                                     }
                                 })
                             }
                         }
                     };
-                    let path = std::path::Path::new(save_m.value_of("output").unwrap());
+                    // FIXME: we can use a pathbuf instead of this removes one allocation
+                    let path = std::path::Path::new(&output);
                     std::fs::create_dir_all(&path).unwrap();
                     let path = path.join(format!("{}.conf", server.hostname));
                     std::fs::write(
@@ -559,7 +380,7 @@ Endpoint = {}:{}\n",
                             privkey_base64,
                             address,
                             IPV4_GATEWAY,
-                            if save_m.is_present("killswitch") {
+                            if killswitch {
                                 "\nPostUp = iptables -I OUTPUT ! -o %i -m mark ! --mark $(wg show \
                                  %i fwmark) -m addrtype ! --dst-type LOCAL -j REJECT && ip6tables \
                                  -I OUTPUT ! -o %i -m mark ! --mark $(wg show %i fwmark) -m \
@@ -581,13 +402,8 @@ PreDown = iptables -D OUTPUT ! -o %i -m mark ! --mark $(wg show %i fwmark) -m ad
                     println!("Wrote configuration to {}.", path.to_str().unwrap());
                 }
             }
-            _ => unreachable!(),
         },
-        _ => {
-            if !action_performed {
-                app().print_help().unwrap();
-            }
-        }
+        None => (),
     };
 }
 
