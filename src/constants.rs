@@ -5,7 +5,13 @@ pub const BASE_URL: &str = "https://vpn.mozilla.org";
 pub const V1_API: &str = "/api/v1";
 pub const V2_API: &str = "/api/v2";
 pub const IPV4_GATEWAY: Ipv4Addr = Ipv4Addr::new(10, 64, 0, 1);
-pub const PORT_RANGES: [(u16, u16); 4] = [(53, 53), (4000, 33433), (33565, 51820), (52000, 60000)];
+pub const PORT_RANGES: [(u16, u16); 5] = [
+    (53, 53),
+    (123, 123),
+    (4000, 33433),
+    (33565, 51820),
+    (52000, 60000),
+];
 pub const EXPLOITATION_ATTEMPT_MESSAGE: &str = "INVALID DATA RETURNED FROM SERVER, THE CONTENT \
                                                 COULD HAVE BEEN TEMPERED IN AN ATTEMPT AT \
                                                 EXPLOITING VULNERABILITIES";
