@@ -102,7 +102,7 @@ pub(crate) enum RelayCommands {
         #[clap(long, value_enum, default_value_t)]
         tunnel: Tunnel,
         /// Limit the number of servers saved. A value of 0 disables the limit.
-        #[clap(short, default_value_t = 1)]
+        #[clap(short = 'n', default_value_t = 1)]
         limit: usize,
         /// Enables a kill switch
         #[clap(long)]
