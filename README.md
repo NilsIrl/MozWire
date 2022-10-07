@@ -12,13 +12,13 @@ Windows.
 
 ## Features
 
-* Support for [multihop] servers (Not available on official clients)
+* Support for [multihop] servers (Not available on official clients) (`--hop`)
 * Select individual servers (as opposed to being limited to choosing cities) (Not available on official clients)
-* Select custom remote port, bypassing firewalls (Not available on official clients)
+* Select custom remote port, bypassing firewalls (Not available on official clients) (`--port`)
 * Support for other operating systems (Not available on official clients)
 * Use "native" WireGuard clients with more customizability (Not available on official clients)
-* Tunnel only IPv6 traffic (Not available on official clients)
-* Supports kill switch
+* Tunnel only IPv6 traffic (Not available on official clients) (`--tunnel`)
+* Supports kill switch (`--killswitch`)
 * Works with [socks5 multihop]
 
 ## Installation
