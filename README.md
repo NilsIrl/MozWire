@@ -93,40 +93,36 @@ mozwire .... # mozwire commands can be run without having to log in
 [![asciicast](https://asciinema.org/a/wQgorg0PgkrjI52NSWEdzdQ7U.svg)](https://asciinema.org/a/wQgorg0PgkrjI52NSWEdzdQ7U)
 
 ```
-mozwire 0.7.0
+mozwire 0.8.0
 Nils <nils@nilsand.re>
 MozillaVPN wireguard configuration manager
 
 USAGE:
-    mozwire [FLAGS] [OPTIONS] [SUBCOMMAND]
-
-FLAGS:
-    -h, --help           Prints help information
-        --no-browser     By default, mozwire will open the login page in a
-                         browser, this option prevents mozwire a browser page
-                         from being opened.
-        --print-token    Print the token used to query the Mozilla API, so that
-                         it can be reused with --token, without having to sign
-                         in each time.
-    -V, --version        Prints version information
+    mozwire [OPTIONS] [SUBCOMMAND]
 
 OPTIONS:
-        --token <token>    The token used to communicate with the Mozilla API.
-                           If unspecified, a web page will be opened to retrieve
-                           the token. the MOZ_TOKEN environment variable can
-                           also be used instead. [env: MOZ_TOKEN=]
+    -h, --help             Print help information
+        --no-browser       By default, mozwire will open the login page in a browser,
+                           this option prevents mozwire a browser page from being opened
+        --print-token      Print the token used to query the Mozilla API, so that it can
+                           be reused with --token, without having to sign in each time
+        --token <TOKEN>    The token used to communicate with the Mozilla API. If
+                           unspecified, a web page will be opened to retrieve the token.
+                           the MOZ_TOKEN environment variable can also be used instead
+                           [env: MOZ_TOKEN=]
+    -V, --version          Print version information
 
 SUBCOMMANDS:
-    device    Add, remove and list devices. To connect to MozillaVPN, a
-              device needs to be on the list.
-    help      Prints this message or the help of the given subcommand(s)
-    relay     List available relays (VPN Servers) and save WireGuard
-              configurations for these.
+    device    Add, remove and list devices. To connect to MozillaVPN, a device needs
+                  to be on the list
+    help      Print this message or the help of the given subcommand(s)
+    relay     List available relays (VPN Servers) and save WireGuard configurations
+                  for these
 
-To query MozillaVPN, mozwire requires a token, specified with --token. If it is
-left unspecified, mozwire will generate a token by opening a login page, the
-token generated can be printed using --print-token, so that it can be reused. To
-generate a WireGuard configuration use `mozwire relay save`.
+To query MozillaVPN, mozwire requires a token, specified with --token. If it is left
+unspecified, mozwire will generate a token by opening a login page, the token generated
+can be printed using --print-token, so that it can be reused. To generate a WireGuard
+configuration use `mozwire relay save`.
 ```
 
 ## Contact
