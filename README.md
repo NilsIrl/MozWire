@@ -69,6 +69,48 @@ cd MozWire
 cargo build
 ```
 
+#### Example Build for a Raspberry Pi
+
+If you want to compile this project for a Pi without installing all the
+toolchain to your Pi, you can easily do so. Assuming you have the rust
+environment set up, the steps are pretty simple.
+
+Before you begin, make sure your operating system on your raspi has the
+necessary `glibc` version!
+
+First, install the gcc library that will handle the linking.
+
+``` sh
+sudo apt install gcc-aarch64-linux-gnu
+```
+
+Once we have the gcc ready, we can just add a rust target that will use it.
+
+``` sh
+rustup target add aarch64-unknown-linux-gnu
+```
+
+Next, we clone the repo, and get into the directory
+``` sh
+git clone https://github.com/NilsIrl/MozWire.git
+cd Mozwire
+```
+
+Before we start compiling with cargo, we need to define the gcc linker that we
+installed as an exported variable. Then we compile Mozwire against that target.
+
+``` sh
+export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc
+cargo build --target=aarch64-unknown-linux-gnu
+```
+Finally, we can use the `file` utility to check the output binary
+
+``` sh
+file target/aarch64-unknown-linux-gnu/debug/mozwire
+```
+
+If all goes well, you should get the details of the executable. Now you can put
+it on your Pi and start using it.
 ## Usage
 
 `mozwire relay save` to generate a WireGuard configuration. `--help` to get help
