@@ -26,5 +26,5 @@ serde = { version = "1.0.137", features = ["derive"] }
 sha2 = "0.10.2"
 sys-info = "0.9.1"
 tiny_http = "0.11.0"
-webbrowser = "0.7.1"
+webbrowser = "0.8.7"
 x25519-dalek = "1.2.0"
