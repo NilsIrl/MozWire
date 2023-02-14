@@ -134,7 +134,7 @@ configuration use `mozwire relay save`.
 MozWire is licensed under the GNU GENERAL PUBLIC LICENSE Version 3. I am willing
 to relicense it.
 
-Copyright © 2020 Nils André
+Copyright © 2020-2023 Nils André
 
 [Arch Linux]: https://www.archlinux.org/
 [AUR]: https://wiki.archlinux.org/index.php/Arch_User_Repository
