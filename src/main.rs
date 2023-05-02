@@ -200,13 +200,14 @@ fn main() {
                 privkey,
                 name,
             } => {
-                let pubkey = pubkey.unwrap_or(match private_to_public_key(&privkey.unwrap()) {
-                    Ok(pubkey) => pubkey,
-                    Err(_) => {
-                        println!("Invalid private key.");
-                        std::process::exit(2)
-                    }
-                });
+                let pubkey =
+                    pubkey.unwrap_or_else(|| match private_to_public_key(&privkey.unwrap()) {
+                        Ok(pubkey) => pubkey,
+                        Err(_) => {
+                            println!("Invalid private key.");
+                            std::process::exit(2)
+                        }
+                    });
                 println!(
                     "{}",
                     &NewDevice {
