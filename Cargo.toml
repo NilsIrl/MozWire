@@ -21,7 +21,7 @@ clap = { version = "3.2.5", features = ["color", "derive", "env", "wrap_help"] }
 percent-encoding = "2.1.0"
 rand = "0.7.3"
 regex = "1.5.6"
-reqwest = { version = "0.11.11", default-features = false, features = ["rustls-tls", "blocking", "json"] }
+reqwest = { version = "0.11.27", default-features = false, features = ["rustls-tls", "blocking", "json"] }
 serde = { version = "1.0.137", features = ["derive"] }
 sha2 = "0.10.2"
 sys-info = "0.9.1"
